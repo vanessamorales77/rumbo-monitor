@@ -4,10 +4,10 @@
  * Vehicles follow real street routes (src/api/demoRoutes.json), never straight lines over water.
  *
  *   npm run simulate
- *   npm run simulate -- --host=demo4.traccar.org --interval=3 --unit=kmh
+ *   npm run simulate -- --host=demo4.traccar.org --interval=3
  *
  * Devices must already exist in Traccar with the identifiers listed below.
- * --unit is how the server reads the `speed` parameter: kmh (default), kn or ms.
+ * --unit is how the server reads the `speed` parameter. Traccar's OsmAnd endpoint expects knots (default, verified against the app); kmh and ms exist for debugging.
  * Requires Node 22.18+ (runs TypeScript natively).
  */
 import { readFileSync } from 'node:fs'
@@ -23,7 +23,7 @@ const args = Object.fromEntries(
 const HOST = args.host ?? 'demo4.traccar.org'
 const PORT = args.port ?? '5055'
 const INTERVAL_S = Number(args.interval ?? 3)
-const UNIT = args.unit ?? 'kmh'
+const UNIT = args.unit ?? 'kn'
 
 const KMH_TO: Record<string, number> = { kmh: 1, kn: 1 / 1.852, ms: 1 / 3.6 }
 if (!(UNIT in KMH_TO)) {
