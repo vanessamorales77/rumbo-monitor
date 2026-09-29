@@ -22,7 +22,7 @@ export function DeviceSelector({ devices, selectedId, onSelect, disabled }: Prop
         disabled={disabled || devices.length === 0}
         onChange={(event) => onSelect(Number(event.target.value))}
       >
-        {devices.length === 0 && <option value="">Sin vehículos</option>}
+        {devices.length === 0 && <option value="">Sin datos</option>}
         {devices.map((device) => (
           <option key={device.id} value={device.id}>
             {device.name}
