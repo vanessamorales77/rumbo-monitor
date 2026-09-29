@@ -1,20 +1,13 @@
 import type { DeviceStatus } from '../../api'
+import { connectionLabel } from '../../utils/status'
 import './ConnectionIndicator.css'
 
-const LABELS: Record<DeviceStatus, string> = {
-  online: 'En línea',
-  offline: 'Sin conexión',
-  unknown: 'Desconocido',
-}
-
-/** Status is always dot + text, never colour alone. */
+/** Status pill. Always dot + text, never colour alone. */
 export function ConnectionIndicator({ status }: { status: DeviceStatus }) {
   return (
     <span className={`connection connection--${status}`}>
       <span className="connection__dot" aria-hidden="true" />
-      <span className="connection__label">{LABELS[status]}</span>
+      <span className="connection__label">{connectionLabel(status)}</span>
     </span>
   )
 }
-
-export const connectionLabel = (status: DeviceStatus): string => LABELS[status]

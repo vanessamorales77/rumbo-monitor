@@ -3,6 +3,7 @@
   height: 100%;
   min-height: 320px;
   background: var(--color-surface-sunken);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   overflow: hidden;
 }
@@ -12,24 +13,64 @@
   filter: var(--map-tile-filter);
 }
 
-.vehicle-map .leaflet-control-zoom a {
+/* Zoom: two separate 44px targets, 12px radius, 8px apart. */
+.vehicle-map .leaflet-bar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  border: 0;
+  box-shadow: none;
+}
+
+.vehicle-map .leaflet-bar a {
+  display: grid;
+  place-items: center;
   width: var(--tap-target);
   height: var(--tap-target);
-  line-height: var(--tap-target);
+  line-height: 1;
+  font-size: 22px;
   background: var(--color-surface);
-  color: var(--color-text);
-  border-color: var(--color-border-strong);
+  color: var(--color-text-muted);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  transition: color var(--duration-fast) var(--ease-standard);
+}
+
+.vehicle-map .leaflet-bar a:hover {
+  background: var(--color-surface);
+  color: var(--color-accent);
+}
+
+.vehicle-map .leaflet-bar a:focus-visible {
+  outline-offset: 0;
+}
+
+.vehicle-map .leaflet-right .leaflet-control {
+  margin-right: var(--space-4);
+}
+
+.vehicle-map .leaflet-bottom .leaflet-control {
+  margin-bottom: var(--space-4);
+}
+
+.vehicle-map .leaflet-left .leaflet-control {
+  margin-left: var(--space-4);
 }
 
 .vehicle-map .leaflet-control-attribution {
+  padding: 2px var(--space-2);
+  font-size: var(--font-size-sm);
   background: var(--color-surface);
   color: var(--color-text-muted);
+  border-radius: var(--radius-sm);
 }
 
 .vehicle-map .leaflet-control-attribution a {
   color: var(--color-accent);
 }
 
+/* Marker: ring and halo carry the connection state, the arrow carries the heading (accent). */
 .vehicle-marker {
   --marker-color: var(--color-neutral);
   background: none;
@@ -46,8 +87,8 @@
 
 .vehicle-marker__rotor {
   --heading: 0deg;
-  width: 48px;
-  height: 48px;
+  width: 56px;
+  height: 56px;
   transform: rotate(var(--heading));
   transition: transform var(--duration-slow) var(--ease-standard);
 }
@@ -55,20 +96,35 @@
 .vehicle-marker__halo {
   fill: var(--marker-color);
   opacity: 0.22;
+  transition: fill var(--duration-base) var(--ease-standard);
 }
 
 .vehicle-marker__disc {
   fill: var(--color-surface);
   stroke: var(--marker-color);
-  stroke-width: 3;
+  stroke-width: 4;
+  transition: stroke var(--duration-base) var(--ease-standard);
 }
 
 .vehicle-marker__arrow {
-  fill: var(--marker-color);
+  fill: var(--color-accent);
 }
 
 .vehicle-marker:focus-visible {
   outline: var(--focus-ring-width) solid var(--color-focus);
   outline-offset: 0;
   border-radius: var(--radius-full);
+}
+
+@media (max-width: 767px) {
+  /* The status card is a bottom sheet here, so zoom moves to the top-right corner. */
+  .vehicle-map .leaflet-bottom.leaflet-right {
+    top: 0;
+    bottom: auto;
+  }
+
+  .vehicle-map .leaflet-bottom.leaflet-right .leaflet-control {
+    margin-top: var(--space-4);
+    margin-bottom: 0;
+  }
 }

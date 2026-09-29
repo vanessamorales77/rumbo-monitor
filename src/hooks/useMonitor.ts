@@ -8,7 +8,7 @@ export type Phase = 'loading' | 'ready' | 'error'
  * `retry()` re-runs the sequence from scratch.
  */
 export function useMonitor() {
-  const source = useMemo(createSource, [])
+  const source = useMemo(() => createSource(), [])
   const [attempt, setAttempt] = useState(0)
   const [phase, setPhase] = useState<Phase>('loading')
   const [errorKind, setErrorKind] = useState<ErrorKind | null>(null)
@@ -20,9 +20,6 @@ export function useMonitor() {
   useEffect(() => {
     let cancelled = false
     let unsubscribe: (() => void) | undefined
-    setPhase('loading')
-    setErrorKind(null)
-
     const upsertDevice = (device: Device) =>
       setDevices((list) =>
         list.some((d) => d.id === device.id)
@@ -56,7 +53,11 @@ export function useMonitor() {
     }
   }, [source, attempt])
 
-  const retry = useCallback(() => setAttempt((n) => n + 1), [])
+  const retry = useCallback(() => {
+    setPhase('loading')
+    setErrorKind(null)
+    setAttempt((n) => n + 1)
+  }, [])
 
   const selectedDevice = devices.find((d) => d.id === selectedId) ?? null
   const selectedPosition = selectedId === null ? null : (positions[selectedId] ?? null)

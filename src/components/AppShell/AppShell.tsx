@@ -20,9 +20,7 @@ export function AppShell() {
       </a>
 
       <header className="app-shell__bar">
-        <h1 className="app-shell__brand">
-          Rumbo <span>Monitor de flota</span>
-        </h1>
+        <h1 className="app-shell__brand">Rumbo</h1>
         <div className="app-shell__controls">
           <DeviceSelector
             devices={monitor.devices}
@@ -40,22 +38,16 @@ export function AppShell() {
         ) : (
           <>
             <div className="app-shell__map">
-              {phase === 'loading' ? <MapSkeleton /> : <VehicleMap device={monitor.selectedDevice} position={monitor.selectedPosition} />}
+              {phase === 'loading' ? (
+                <MapSkeleton />
+              ) : (
+                <VehicleMap device={monitor.selectedDevice} position={monitor.selectedPosition} />
+              )}
             </div>
             <div className="app-shell__panel">
-              {phase === 'loading' && (
-                <>
-                  <p className="visually-hidden" role="status">
-                    Cargando datos del vehículo…
-                  </p>
-                  <CardSkeleton />
-                </>
-              )}
+              {phase === 'loading' && <CardSkeleton />}
               {phase === 'ready' && monitor.selectedDevice && (
-                <StatusCard device={monitor.selectedDevice} position={monitor.selectedPosition} mode={monitor.mode} />
-              )}
-              {phase === 'ready' && !monitor.selectedDevice && (
-                <p className="app-shell__empty">Selecciona un vehículo para comenzar.</p>
+                <StatusCard device={monitor.selectedDevice} position={monitor.selectedPosition} />
               )}
             </div>
           </>

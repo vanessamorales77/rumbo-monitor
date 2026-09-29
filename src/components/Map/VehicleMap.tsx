@@ -1,7 +1,7 @@
 import { useRef } from 'react'
 import 'leaflet/dist/leaflet.css'
 import type { Device, Position } from '../../api'
-import { connectionLabel } from '../ConnectionIndicator/ConnectionIndicator'
+import { connectionLabel } from '../../utils/status'
 import { knotsToKmh } from '../../utils/units'
 import { useVehicleMarker } from './useVehicleMarker'
 import './VehicleMap.css'
@@ -27,6 +27,7 @@ export function VehicleMap({ device, position }: Props) {
     course: position?.course ?? 0,
     status: device?.status ?? 'unknown',
     label,
+    snapKey: device?.id ?? null,
   })
 
   return <div ref={containerRef} className="vehicle-map" role="region" aria-label="Mapa de ubicación del vehículo" />

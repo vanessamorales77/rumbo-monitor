@@ -1,19 +1,20 @@
-import { useEffect, useRef, useState } from 'react'
-import type { Device, FeedMode, Position } from '../../api'
+import { useState } from 'react'
+import type { Device } from '../../api'
+import type { Position } from '../../api'
 import { useNow } from '../../hooks/useNow'
-import { knotsToKmh } from '../../utils/units'
+import { connectionLabel } from '../../utils/status'
 import { formatClock, formatRelative } from '../../utils/time'
-import { ConnectionIndicator, connectionLabel } from '../ConnectionIndicator/ConnectionIndicator'
+import { knotsToKmh } from '../../utils/units'
+import { ConnectionIndicator } from '../ConnectionIndicator/ConnectionIndicator'
 import { AnimatedValue } from './AnimatedValue'
 import './StatusCard.css'
 
 interface Props {
   device: Device
   position: Position | null
-  mode: FeedMode
 }
 
-export function StatusCard({ device, position, mode }: Props) {
+export function StatusCard({ device, position }: Props) {
   const now = useNow()
   const speed = position ? knotsToKmh(position.speed) : null
   const announcement = useAnnouncement(device, speed)
@@ -28,57 +29,36 @@ export function StatusCard({ device, position, mode }: Props) {
       </header>
 
       <dl className="status-card__data">
-        <div className="status-card__row status-card__row--hero">
+        <div className="status-card__row">
           <dt>Velocidad</dt>
-          <dd>
+          <dd className="status-card__value status-card__value--hero">
             {speed === null ? (
               '—'
             ) : (
               <AnimatedValue value={speed}>
                 <span className="status-card__number">{speed}</span>
-                <span className="status-card__unit"> km/h</span>
+                <span className="status-card__unit">km/h</span>
               </AnimatedValue>
             )}
           </dd>
         </div>
 
-        {position?.attributes.batteryLevel !== undefined && (
-          <div className="status-card__row">
-            <dt>Batería</dt>
-            <dd>
-              <AnimatedValue value={position.attributes.batteryLevel}>{position.attributes.batteryLevel} %</AnimatedValue>
-            </dd>
-          </div>
-        )}
-
-        {position && (
-          <div className="status-card__row">
-            <dt>Rumbo</dt>
-            <dd>
-              <AnimatedValue value={Math.round(position.course)}>{Math.round(position.course)}°</AnimatedValue>
-            </dd>
-          </div>
-        )}
-
         <div className="status-card__row">
           <dt>Última actualización</dt>
-          <dd>
+          <dd className="status-card__value">
             {position ? (
               <>
-                <AnimatedValue value={position.fixTime}>{formatClock(position.fixTime)}</AnimatedValue>
-                <span className="status-card__relative">{formatRelative(position.fixTime, now)}</span>
+                <ClockIcon />
+                <time dateTime={position.fixTime} title={formatClock(position.fixTime)}>
+                  <AnimatedValue value={position.fixTime}>{formatRelative(position.fixTime, now)}</AnimatedValue>
+                </time>
               </>
             ) : (
-              'Sin posición registrada'
+              'Sin datos todavía'
             )}
           </dd>
         </div>
       </dl>
-
-      <p className="status-card__feed">
-        <span className={`status-card__feed-dot status-card__feed-dot--${mode}`} aria-hidden="true" />
-        {mode === 'live' ? 'Datos en vivo' : 'Actualizando cada 5 s'}
-      </p>
 
       {/* Screen readers get meaningful changes only, not every GPS tick. */}
       <p className="visually-hidden" role="status" aria-live="polite">
@@ -88,28 +68,39 @@ export function StatusCard({ device, position, mode }: Props) {
   )
 }
 
-/** Announce connection changes and speed changes of 10 km/h or more. */
+function ClockIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false" className="status-card__icon">
+      <g fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="9" />
+        <path d="M12 7v5l3 2" />
+      </g>
+    </svg>
+  )
+}
+
+/**
+ * Announce connection changes and speed changes of 10 km/h or more.
+ * Baseline lives in state and is adjusted during render (no effect needed);
+ * switching vehicle resets it silently.
+ */
 function useAnnouncement(device: Device, speed: number | null): string {
-  const [text, setText] = useState('')
-  const last = useRef<{ status: string; speed: number | null } | null>(null)
+  const [state, setState] = useState({ deviceId: device.id, status: device.status, speed, text: '' })
 
-  useEffect(() => {
-    const previous = last.current
-    if (previous === null) {
-      last.current = { status: device.status, speed }
-      return
-    }
-    const parts: string[] = []
-    if (previous.status !== device.status) {
-      parts.push(`${device.name}: ${connectionLabel(device.status)}`)
-      last.current = { ...previous, status: device.status }
-    }
-    if (speed !== null && (previous.speed === null || Math.abs(speed - previous.speed) >= 10)) {
-      parts.push(`velocidad ${speed} kilómetros por hora`)
-      last.current = { ...(last.current ?? previous), speed }
-    }
-    if (parts.length) setText(parts.join(', '))
-  }, [device.status, device.name, speed])
+  if (state.deviceId !== device.id) {
+    setState({ deviceId: device.id, status: device.status, speed, text: '' })
+    return ''
+  }
 
-  return text
+  const parts: string[] = []
+  let nextSpeed = state.speed
+  if (state.status !== device.status) parts.push(`${device.name}: ${connectionLabel(device.status)}`)
+  if (speed !== null && (state.speed === null || Math.abs(speed - state.speed) >= 10)) {
+    parts.push(`velocidad ${speed} kilómetros por hora`)
+    nextSpeed = speed
+  }
+  if (parts.length > 0) {
+    setState({ deviceId: device.id, status: device.status, speed: nextSpeed, text: parts.join(', ') })
+  }
+  return state.text
 }

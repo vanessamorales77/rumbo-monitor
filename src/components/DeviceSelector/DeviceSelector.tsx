@@ -12,7 +12,7 @@ interface Props {
 export function DeviceSelector({ devices, selectedId, onSelect, disabled }: Props) {
   return (
     <div className="device-selector">
-      <label htmlFor="device-select" className="device-selector__label">
+      <label htmlFor="device-select" className="visually-hidden">
         Vehículo
       </label>
       <select
@@ -29,6 +29,7 @@ export function DeviceSelector({ devices, selectedId, onSelect, disabled }: Prop
           </option>
         ))}
       </select>
+      <span className="device-selector__chevron" aria-hidden="true" />
     </div>
   )
 }

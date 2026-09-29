@@ -30,10 +30,14 @@ export function ErrorState({ kind, onRetry }: { kind: ErrorKind; onRetry: () => 
 
   return (
     <section className="error-state" role="alert" aria-labelledby="error-title">
-      <svg className="error-state__icon" viewBox="0 0 64 64" width="64" height="64" aria-hidden="true" focusable="false">
-        <circle cx="32" cy="32" r="28" fill="none" stroke="currentColor" strokeWidth="4" />
-        <path d="M32 18v18M32 44v2" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
-      </svg>
+      <span className="error-state__icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="28" height="28" focusable="false">
+          <g fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M2 8.8a15 15 0 0 1 4-2.6M22 8.8a15 15 0 0 0-8-3.7M5 12.9a10 10 0 0 1 3.2-2M19 12.9a10 10 0 0 0-3-2M8.5 16.4a5 5 0 0 1 7 0" />
+            <path d="M12 20h.01M3 3l18 18" />
+          </g>
+        </svg>
+      </span>
       <h2 id="error-title" ref={headingRef} tabIndex={-1} className="error-state__title">
         {title}
       </h2>

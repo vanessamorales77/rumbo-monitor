@@ -1,30 +1,26 @@
 .app-shell {
   display: flex;
   flex-direction: column;
-  min-height: 100%;
+  height: 100dvh;
 }
 
 .app-shell__bar {
   display: flex;
+  flex: none;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
-  padding: var(--space-3) var(--space-4);
+  height: var(--header-height);
+  padding: 0 var(--space-4);
   background: var(--color-surface);
   border-bottom: 1px solid var(--color-border);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
 }
 
 .app-shell__brand {
-  font-size: var(--font-size-lg);
+  font-size: var(--font-size-xl);
   font-weight: var(--font-weight-semibold);
-  line-height: var(--line-height-tight);
-}
-
-.app-shell__brand span {
-  display: block;
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-regular);
-  color: var(--color-text-muted);
+  line-height: 28px;
 }
 
 .app-shell__controls {
@@ -33,37 +29,46 @@
   gap: var(--space-3);
 }
 
+/* Mobile: the map fills the screen and the status card is a bottom sheet over it. */
 .app-shell__main {
+  position: relative;
   flex: 1;
-  display: grid;
-  grid-template-columns: 1fr;
-  grid-template-rows: minmax(320px, 55vh) auto;
-  gap: var(--space-4);
+  min-height: 0;
   padding: var(--space-4);
+  display: flex;
 }
 
-.app-shell__map,
-.app-shell__panel {
+.app-shell__map {
+  flex: 1;
   min-width: 0;
 }
 
-.app-shell__empty {
-  padding: var(--space-5);
-  color: var(--color-text-muted);
+.app-shell__panel {
+  position: absolute;
+  left: var(--space-4);
+  right: var(--space-4);
+  bottom: var(--space-4);
+  z-index: 1100; /* above Leaflet panes and controls */
 }
 
-/* The error state fills the whole content area. */
 .app-shell__main > .error-state {
-  grid-column: 1 / -1;
-  grid-row: 1 / -1;
+  align-self: center;
 }
 
-@media (min-width: 900px) {
+@media (min-width: 768px) {
+  .app-shell__bar {
+    padding: 0 var(--space-6);
+  }
+
   .app-shell__main {
-    grid-template-columns: minmax(0, 1fr) 24rem;
-    grid-template-rows: minmax(0, 1fr);
-    height: calc(100dvh - 73px);
-    padding: var(--space-5);
     gap: var(--space-5);
+    padding: var(--space-5) var(--space-6);
+  }
+
+  .app-shell__panel {
+    position: static;
+    flex: none;
+    width: var(--panel-width);
+    align-self: flex-start;
   }
 }

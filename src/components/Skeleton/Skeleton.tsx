@@ -1,19 +1,35 @@
+import '../StatusCard/StatusCard.css'
 import './Skeleton.css'
 
-/** Mirrors the final layout dimensions so nothing shifts when data arrives. */
+/** Same container and row classes as StatusCard, so heights match exactly. */
 export function CardSkeleton() {
   return (
-    <div className="skeleton-card" aria-hidden="true">
-      <span className="skeleton skeleton--title" />
-      <span className="skeleton skeleton--pill" />
-      <span className="skeleton skeleton--hero" />
-      <span className="skeleton skeleton--row" />
-      <span className="skeleton skeleton--row" />
-      <span className="skeleton skeleton--row" />
+    <div className="status-card" aria-hidden="true">
+      <div className="status-card__header">
+        <span className="skeleton skeleton--title" />
+        <span className="skeleton skeleton--pill" />
+      </div>
+      <div className="status-card__data">
+        <div className="status-card__row">
+          <span className="skeleton skeleton--label" />
+          <span className="skeleton skeleton--hero" />
+        </div>
+        <div className="status-card__row">
+          <span className="skeleton skeleton--label" />
+          <span className="skeleton skeleton--value" />
+        </div>
+      </div>
     </div>
   )
 }
 
 export function MapSkeleton() {
-  return <div className="skeleton skeleton--map" aria-hidden="true" />
+  return (
+    <div className="skeleton skeleton--map">
+      <p className="skeleton-map__pill" role="status">
+        <span className="skeleton-map__spinner" aria-hidden="true" />
+        Cargando…
+      </p>
+    </div>
+  )
 }
