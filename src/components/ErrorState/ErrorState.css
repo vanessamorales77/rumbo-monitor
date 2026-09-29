@@ -1,0 +1,47 @@
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  max-width: 28rem;
+  margin: auto;
+  padding: var(--space-6);
+  text-align: center;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+}
+
+.error-state__icon {
+  color: var(--color-danger);
+}
+
+.error-state__title {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+}
+
+.error-state__title:focus {
+  outline: none; /* programmatic focus only; the retry button carries the visible focus ring */
+}
+
+.error-state__body {
+  color: var(--color-text-muted);
+}
+
+.error-state__retry {
+  min-height: var(--tap-target);
+  padding: 0 var(--space-5);
+  background: var(--color-accent);
+  color: var(--color-accent-contrast);
+  border: 0;
+  border-radius: var(--radius-sm);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+  transition: filter var(--duration-fast) var(--ease-standard);
+}
+
+.error-state__retry:hover {
+  filter: brightness(1.1);
+}

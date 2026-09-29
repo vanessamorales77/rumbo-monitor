@@ -1,0 +1,104 @@
+.status-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  padding: var(--space-5);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.status-card__header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.status-card__title {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-tight);
+}
+
+.status-card__data {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.status-card__row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border);
+}
+
+.status-card__row dt {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.status-card__row dd {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-medium);
+  font-variant-numeric: tabular-nums;
+}
+
+.status-card__row--hero {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.status-card__number {
+  font-size: var(--font-size-display);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1;
+}
+
+.status-card__unit,
+.status-card__relative {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-regular);
+  color: var(--color-text-muted);
+}
+
+.status-card__feed {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.status-card__feed-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-full);
+  background: var(--color-success);
+}
+
+.status-card__feed-dot--polling {
+  background: var(--color-warning);
+}
+
+/* Soft highlight that fades out: guides the eye without demanding attention. */
+.animated-value {
+  border-radius: var(--radius-sm);
+  animation: value-highlight var(--duration-slow) var(--ease-standard);
+}
+
+@keyframes value-highlight {
+  from {
+    background-color: var(--color-highlight);
+    box-shadow: 0 0 0 4px var(--color-highlight);
+  }
+  to {
+    background-color: transparent;
+    box-shadow: 0 0 0 4px transparent;
+  }
+}

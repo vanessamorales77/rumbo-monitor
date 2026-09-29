@@ -1,0 +1,57 @@
+/* Colour tokens. Contrast ratios noted against the surface they are used on (WCAG 2.1 AA:
+   4.5:1 for text, 3:1 for UI components and graphics). */
+
+:root,
+:root[data-theme='light'] {
+  color-scheme: light;
+  --color-bg: #f3f5f9;
+  --color-surface: #ffffff;
+  --color-surface-sunken: #e8ecf3;
+  --color-text: #0f172a; /* 17.8:1 on surface */
+  --color-text-muted: #475569; /* 7.6:1 on surface */
+  --color-border: #d5dbe6; /* decorative dividers only */
+  --color-border-strong: #64748b; /* 4.8:1 — form controls */
+  --color-accent: #1d4ed8; /* 6.7:1 on surface */
+  --color-accent-contrast: #ffffff;
+  --color-focus: #1d4ed8;
+  --color-success: #15803d; /* 5.0:1 on surface */
+  --color-warning: #b45309; /* 5.0:1 on surface */
+  --color-danger: #b91c1c; /* 6.5:1 on surface */
+  --color-neutral: #64748b; /* 4.8:1 on surface */
+  --color-highlight: rgba(29, 78, 216, 0.14);
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.08);
+  --shadow-md: 0 8px 24px rgba(15, 23, 42, 0.12);
+  --skeleton-base: #e2e8f0;
+  --skeleton-shine: #f1f5f9;
+  --map-tile-filter: none;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --color-bg: #0a101d;
+  --color-surface: #121b2f;
+  --color-surface-sunken: #0d1526;
+  --color-text: #e8edf7; /* 14.4:1 on surface */
+  --color-text-muted: #a9b6cc; /* 8.2:1 on surface */
+  --color-border: #26334d;
+  --color-border-strong: #7a8aa6; /* 4.6:1 — form controls */
+  --color-accent: #8ab0ff; /* 8.4:1 on surface */
+  --color-accent-contrast: #0a101d;
+  --color-focus: #ffd166;
+  --color-success: #4ade80; /* 9.4:1 on surface */
+  --color-warning: #fbbf24; /* 10.2:1 on surface */
+  --color-danger: #f87171; /* 6.3:1 on surface */
+  --color-neutral: #94a3b8; /* 6.6:1 on surface */
+  --color-highlight: rgba(138, 176, 255, 0.2);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.5);
+  --skeleton-base: #1c2740;
+  --skeleton-shine: #26334d;
+  --map-tile-filter: invert(1) hue-rotate(180deg) brightness(0.85) contrast(0.9) saturate(0.7);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    color-scheme: dark;
+  }
+}
