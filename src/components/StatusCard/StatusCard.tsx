@@ -6,7 +6,9 @@ import { connectionLabel } from '../../utils/status'
 import { formatClock, formatRelative } from '../../utils/time'
 import { knotsToKmh } from '../../utils/units'
 import { ConnectionIndicator } from '../ConnectionIndicator/ConnectionIndicator'
+import { useTweenedNumber } from '../../hooks/useTweenedNumber'
 import { AnimatedValue } from './AnimatedValue'
+import { FadeText } from './FadeText'
 import './StatusCard.css'
 
 const LOW_BATTERY = 20
@@ -21,6 +23,8 @@ export function StatusCard({ device, position }: Props) {
   const speed = position ? knotsToKmh(position.speed) : null
   const battery = position?.attributes.batteryLevel ?? null
   const batteryLow = battery !== null && battery <= LOW_BATTERY
+  const shownSpeed = useTweenedNumber(speed)
+  const shownBattery = useTweenedNumber(battery)
   const announcement = useAnnouncement(device, speed, batteryLow)
 
   return (
@@ -40,7 +44,7 @@ export function StatusCard({ device, position }: Props) {
               '—'
             ) : (
               <AnimatedValue value={speed}>
-                <span className="status-card__number">{speed}</span>
+                <span className="status-card__number">{Math.round(shownSpeed ?? speed)}</span>
                 <span className="status-card__unit">km/h</span>
               </AnimatedValue>
             )}
@@ -54,8 +58,8 @@ export function StatusCard({ device, position }: Props) {
               'No disponible'
             ) : (
               <>
-                <BatteryIcon level={battery} />
-                <AnimatedValue value={battery}>{Math.round(battery)} %</AnimatedValue>
+                <BatteryIcon level={shownBattery ?? battery} />
+                <AnimatedValue value={battery}>{Math.round(shownBattery ?? battery)} %</AnimatedValue>
                 {batteryLow && <span>· Batería baja</span>}
               </>
             )}
@@ -69,7 +73,9 @@ export function StatusCard({ device, position }: Props) {
               <>
                 <ClockIcon />
                 <time dateTime={position.fixTime} title={formatClock(position.fixTime)}>
-                  <AnimatedValue value={position.fixTime}>{formatRelative(position.fixTime, now)}</AnimatedValue>
+                  <AnimatedValue value={position.fixTime}>
+                    <FadeText text={formatRelative(position.fixTime, now)} />
+                  </AnimatedValue>
                 </time>
               </>
             ) : (

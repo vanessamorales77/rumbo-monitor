@@ -11,8 +11,9 @@ const plural = (n: number, unit: string) => `${n} ${unit}${n === 1 ? '' : 's'}`
 
 export function formatRelative(iso: string, now: number): string {
   const seconds = Math.max(0, Math.round((now - new Date(iso).getTime()) / 1000))
-  if (seconds < 5) return 'Hace unos segundos'
-  if (seconds < 60) return `Hace ${plural(seconds, 'segundo')}`
+  // Coarse steps: a label that changes every second is noise, not information.
+  if (seconds < 10) return 'Hace unos segundos'
+  if (seconds < 60) return `Hace ${plural(Math.floor(seconds / 5) * 5, 'segundo')}`
   const minutes = Math.floor(seconds / 60)
   if (minutes < 60) return `Hace ${plural(minutes, 'minuto')}`
   const hours = Math.floor(minutes / 60)

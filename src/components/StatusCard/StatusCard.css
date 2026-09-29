@@ -91,21 +91,18 @@
   color: var(--color-text-muted);
 }
 
-/* Soft highlight that fades out: guides the eye without demanding attention. */
-.animated-value {
-  border-radius: var(--radius-sm);
-  animation: value-highlight var(--duration-slow) var(--ease-standard);
+.status-card__icon rect:last-child {
+  transition: width var(--duration-slow) var(--ease-standard);
 }
 
-@keyframes value-highlight {
-  from {
-    background-color: var(--color-highlight);
-    box-shadow: 0 0 0 4px var(--color-highlight);
-  }
-  to {
-    background-color: transparent;
-    box-shadow: 0 0 0 4px transparent;
-  }
+/* Highlight animation lives in AnimatedValue (Web Animations API); this only shapes it. */
+.animated-value {
+  display: inline-block;
+  border-radius: var(--radius-sm);
+}
+
+.fade-text {
+  display: inline-block;
 }
 
 /* Mobile bottom sheet: compact, last update on a single line (as in the design). */
