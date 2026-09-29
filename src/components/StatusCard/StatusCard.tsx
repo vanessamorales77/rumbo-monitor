@@ -1,14 +1,15 @@
 import { useState } from 'react'
-import type { Device } from '../../api'
-import type { Position } from '../../api'
+import type { Device, Position } from '../../api'
 import { useNow } from '../../hooks/useNow'
+import { useTweenedNumber } from '../../hooks/useTweenedNumber'
 import { connectionLabel } from '../../utils/status'
 import { formatClock, formatRelative } from '../../utils/time'
 import { knotsToKmh } from '../../utils/units'
 import { ConnectionIndicator } from '../ConnectionIndicator/ConnectionIndicator'
-import { useTweenedNumber } from '../../hooks/useTweenedNumber'
 import { AnimatedValue } from './AnimatedValue'
+import { BatteryBar } from './BatteryBar'
 import { FadeText } from './FadeText'
+import { SpeedGauge } from './SpeedGauge'
 import './StatusCard.css'
 
 const LOW_BATTERY = 20
@@ -30,6 +31,7 @@ export function StatusCard({ device, position }: Props) {
   return (
     <section className="status-card" aria-labelledby="status-card-title">
       <header className="status-card__header">
+        <p className="status-card__eyebrow">Vehículo activo</p>
         <h2 id="status-card-title" className="status-card__title">
           {device.name}
         </h2>
@@ -39,45 +41,47 @@ export function StatusCard({ device, position }: Props) {
       <dl className="status-card__data">
         <div className="status-card__row">
           <dt>Velocidad</dt>
-          <dd className="status-card__value status-card__value--hero">
-            {speed === null ? (
-              '—'
-            ) : (
-              <AnimatedValue value={speed}>
-                <span className="status-card__number">{Math.round(shownSpeed ?? speed)}</span>
-                <span className="status-card__unit">km/h</span>
-              </AnimatedValue>
-            )}
+          <dd className="status-card__value status-card__value--gauge">
+            <SpeedGauge value={shownSpeed ?? 0}>
+              {speed === null ? (
+                <span className="status-card__number">—</span>
+              ) : (
+                <AnimatedValue value={speed}>
+                  <span className="status-card__number">{Math.round(shownSpeed ?? speed)}</span>
+                  <span className="status-card__unit">km/h</span>
+                </AnimatedValue>
+              )}
+            </SpeedGauge>
           </dd>
         </div>
 
         <div className="status-card__row">
           <dt>Batería</dt>
-          <dd className={`status-card__value${batteryLow ? ' status-card__value--alert' : ''}`}>
+          <dd className={`status-card__value status-card__value--battery${batteryLow ? ' status-card__value--alert' : ''}`}>
             {battery === null ? (
               'No disponible'
             ) : (
               <>
-                <BatteryIcon level={shownBattery ?? battery} />
+                <BatteryBar level={shownBattery ?? battery} low={batteryLow} />
                 <AnimatedValue value={battery}>{Math.round(shownBattery ?? battery)} %</AnimatedValue>
-                {batteryLow && <span>· Batería baja</span>}
+                {batteryLow && <span className="status-card__hint">Batería baja</span>}
               </>
             )}
           </dd>
         </div>
 
         <div className="status-card__row">
-          <dt>Última actualización</dt>
+          <dt>
+            <ClockIcon />
+            Última actualización
+          </dt>
           <dd className="status-card__value">
             {position ? (
-              <>
-                <ClockIcon />
-                <time dateTime={position.fixTime} title={formatClock(position.fixTime)}>
-                  <AnimatedValue value={position.fixTime}>
-                    <FadeText text={formatRelative(position.fixTime, now)} />
-                  </AnimatedValue>
-                </time>
-              </>
+              <time dateTime={position.fixTime} title={formatClock(position.fixTime)}>
+                <AnimatedValue value={position.fixTime}>
+                  <FadeText text={formatRelative(position.fixTime, now)} />
+                </AnimatedValue>
+              </time>
             ) : (
               'Sin datos todavía'
             )}
@@ -90,18 +94,6 @@ export function StatusCard({ device, position }: Props) {
         {announcement}
       </p>
     </section>
-  )
-}
-
-/** Filled portion is proportional to the level; the outline keeps its shape for any value. */
-function BatteryIcon({ level }: { level: number }) {
-  const width = Math.max(0, Math.min(100, level)) * 0.12
-  return (
-    <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false" className="status-card__icon">
-      <rect x="2" y="7" width="17" height="10" rx="2" fill="none" stroke="currentColor" strokeWidth="2" />
-      <path d="M22 10.5v3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-      <rect x="4" y="9" width={width} height="6" rx="1" fill="currentColor" />
-    </svg>
   )
 }
 

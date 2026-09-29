@@ -20,7 +20,12 @@ export function AppShell() {
       </a>
 
       <header className="app-shell__bar">
-        <h1 className="app-shell__brand">Rumbo</h1>
+        <h1 className="app-shell__brand">
+          <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false" className="app-shell__mark">
+            <path d="M12 2l2.6 7.4L22 12l-7.4 2.6L12 22l-2.6-7.4L2 12l7.4-2.6z" fill="currentColor" />
+          </svg>
+          Rumbo
+        </h1>
         <div className="app-shell__controls">
           <DeviceSelector
             devices={monitor.devices}
