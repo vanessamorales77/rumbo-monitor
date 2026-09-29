@@ -18,6 +18,10 @@ export function CardSkeleton() {
           <span className="skeleton skeleton--label" />
           <span className="skeleton skeleton--value" />
         </div>
+        <div className="status-card__row">
+          <span className="skeleton skeleton--label" />
+          <span className="skeleton skeleton--value" />
+        </div>
       </div>
     </div>
   )

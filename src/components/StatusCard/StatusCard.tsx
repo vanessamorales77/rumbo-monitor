@@ -9,6 +9,8 @@ import { ConnectionIndicator } from '../ConnectionIndicator/ConnectionIndicator'
 import { AnimatedValue } from './AnimatedValue'
 import './StatusCard.css'
 
+const LOW_BATTERY = 20
+
 interface Props {
   device: Device
   position: Position | null
@@ -17,7 +19,9 @@ interface Props {
 export function StatusCard({ device, position }: Props) {
   const now = useNow()
   const speed = position ? knotsToKmh(position.speed) : null
-  const announcement = useAnnouncement(device, speed)
+  const battery = position?.attributes.batteryLevel ?? null
+  const batteryLow = battery !== null && battery <= LOW_BATTERY
+  const announcement = useAnnouncement(device, speed, batteryLow)
 
   return (
     <section className="status-card" aria-labelledby="status-card-title">
@@ -39,6 +43,21 @@ export function StatusCard({ device, position }: Props) {
                 <span className="status-card__number">{speed}</span>
                 <span className="status-card__unit">km/h</span>
               </AnimatedValue>
+            )}
+          </dd>
+        </div>
+
+        <div className="status-card__row">
+          <dt>Batería</dt>
+          <dd className={`status-card__value${batteryLow ? ' status-card__value--alert' : ''}`}>
+            {battery === null ? (
+              'No disponible'
+            ) : (
+              <>
+                <BatteryIcon level={battery} />
+                <AnimatedValue value={battery}>{Math.round(battery)} %</AnimatedValue>
+                {batteryLow && <span>· Batería baja</span>}
+              </>
             )}
           </dd>
         </div>
@@ -68,6 +87,18 @@ export function StatusCard({ device, position }: Props) {
   )
 }
 
+/** Filled portion is proportional to the level; the outline keeps its shape for any value. */
+function BatteryIcon({ level }: { level: number }) {
+  const width = Math.max(0, Math.min(100, level)) * 0.12
+  return (
+    <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false" className="status-card__icon">
+      <rect x="2" y="7" width="17" height="10" rx="2" fill="none" stroke="currentColor" strokeWidth="2" />
+      <path d="M22 10.5v3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <rect x="4" y="9" width={width} height="6" rx="1" fill="currentColor" />
+    </svg>
+  )
+}
+
 function ClockIcon() {
   return (
     <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false" className="status-card__icon">
@@ -80,15 +111,15 @@ function ClockIcon() {
 }
 
 /**
- * Announce connection changes and speed changes of 10 km/h or more.
+ * Announce connection changes, low battery and speed changes of 10 km/h or more.
  * Baseline lives in state and is adjusted during render (no effect needed);
  * switching vehicle resets it silently.
  */
-function useAnnouncement(device: Device, speed: number | null): string {
-  const [state, setState] = useState({ deviceId: device.id, status: device.status, speed, text: '' })
+function useAnnouncement(device: Device, speed: number | null, batteryLow: boolean): string {
+  const [state, setState] = useState({ deviceId: device.id, status: device.status, speed, batteryLow, text: '' })
 
   if (state.deviceId !== device.id) {
-    setState({ deviceId: device.id, status: device.status, speed, text: '' })
+    setState({ deviceId: device.id, status: device.status, speed, batteryLow, text: '' })
     return ''
   }
 
@@ -99,8 +130,9 @@ function useAnnouncement(device: Device, speed: number | null): string {
     parts.push(`velocidad ${speed} kilómetros por hora`)
     nextSpeed = speed
   }
+  if (state.batteryLow !== batteryLow) parts.push(batteryLow ? 'batería baja' : 'batería recuperada')
   if (parts.length > 0) {
-    setState({ deviceId: device.id, status: device.status, speed: nextSpeed, text: parts.join(', ') })
+    setState({ deviceId: device.id, status: device.status, speed: nextSpeed, batteryLow, text: parts.join(', ') })
   }
   return state.text
 }

@@ -29,30 +29,38 @@
   gap: var(--space-3);
 }
 
-/* Mobile: the map fills the screen and the status card is a bottom sheet over it. */
+/* Mobile: map on top, status card below in normal flow. Nothing overlaps the map,
+   so the marker is never hidden and the layout survives short screens (page scrolls). */
 .app-shell__main {
-  position: relative;
   flex: 1;
   min-height: 0;
-  padding: var(--space-4);
   display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  overflow-y: auto;
 }
 
 .app-shell__map {
-  flex: 1;
+  position: relative;
+  flex: 1 0 auto;
   min-width: 0;
+  min-height: max(45dvh, 260px);
 }
 
 .app-shell__panel {
-  position: absolute;
-  left: var(--space-4);
-  right: var(--space-4);
-  bottom: var(--space-4);
-  z-index: 1100; /* above Leaflet panes and controls */
+  flex: none;
 }
 
 .app-shell__main > .error-state {
   align-self: center;
+}
+
+/* Header stays on one line down to 320px: the vehicle selector is the flexible part. */
+.app-shell__controls {
+  flex: 1;
+  min-width: 0;
+  justify-content: flex-end;
 }
 
 @media (min-width: 768px) {
@@ -61,13 +69,18 @@
   }
 
   .app-shell__main {
+    flex-direction: row;
     gap: var(--space-5);
     padding: var(--space-5) var(--space-6);
+    overflow: hidden;
+  }
+
+  .app-shell__map {
+    flex: 1;
+    min-height: 0;
   }
 
   .app-shell__panel {
-    position: static;
-    flex: none;
     width: var(--panel-width);
     align-self: flex-start;
   }

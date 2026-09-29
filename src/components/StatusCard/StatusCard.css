@@ -61,6 +61,15 @@
   font-variant-numeric: tabular-nums;
 }
 
+.status-card__value--alert {
+  color: var(--color-danger);
+  font-weight: var(--font-weight-medium);
+}
+
+.status-card__value--alert .status-card__icon {
+  color: inherit;
+}
+
 .status-card__value--hero {
   align-items: baseline;
   min-height: var(--row-hero-height);
