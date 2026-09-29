@@ -8,7 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "simulate": "node scripts/simulate.mjs"
+    "simulate": "node scripts/simulate.ts"
   },
   "dependencies": {
     "leaflet": "^1.9.4",
