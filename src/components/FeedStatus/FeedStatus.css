@@ -1,0 +1,48 @@
+/* Sits over the map, top-left; the zoom controls are bottom-right so nothing collides. */
+.feed-status {
+  --feed-color: var(--color-success);
+  position: absolute;
+  top: var(--space-4);
+  left: var(--space-4);
+  z-index: 1000;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  max-width: calc(100% - var(--space-4) * 2);
+  padding: var(--space-1) var(--space-3);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-full);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  line-height: 20px;
+  color: var(--color-text);
+  pointer-events: none;
+}
+
+.feed-status--polling {
+  --feed-color: var(--color-warning);
+}
+
+.feed-status--lost {
+  --feed-color: var(--color-danger);
+  border-color: var(--color-danger);
+}
+
+.feed-status__dot {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-radius: var(--radius-full);
+  background: var(--feed-color);
+  transition: background-color var(--duration-base) var(--ease-standard);
+}
+
+@media (max-width: 767px) {
+  .feed-status {
+    top: var(--space-3);
+    left: var(--space-3);
+    max-width: calc(100% - var(--space-3) * 2);
+  }
+}

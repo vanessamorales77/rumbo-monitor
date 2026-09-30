@@ -20,8 +20,8 @@ export interface Position {
   attributes: { batteryLevel?: number }
 }
 
-/** How live data is currently arriving. */
-export type FeedMode = 'live' | 'polling'
+/** How data is currently arriving: WebSocket, periodic polling, or not at all (shown data is stale). */
+export type FeedMode = 'live' | 'polling' | 'lost'
 
 export interface FeedHandlers {
   onDevice: (device: Device) => void

@@ -2,6 +2,7 @@ import { useMonitor } from '../../hooks/useMonitor'
 import { useTheme } from '../../hooks/useTheme'
 import { DeviceSelector } from '../DeviceSelector/DeviceSelector'
 import { ErrorState } from '../ErrorState/ErrorState'
+import { FeedStatus } from '../FeedStatus/FeedStatus'
 import { VehicleMap } from '../Map/VehicleMap'
 import { CardSkeleton, MapSkeleton } from '../Skeleton/Skeleton'
 import { StatusCard } from '../StatusCard/StatusCard'
@@ -46,7 +47,10 @@ export function AppShell() {
               {phase === 'loading' ? (
                 <MapSkeleton />
               ) : (
-                <VehicleMap device={monitor.selectedDevice} position={monitor.selectedPosition} />
+                <>
+                  <VehicleMap device={monitor.selectedDevice} position={monitor.selectedPosition} />
+                  <FeedStatus mode={monitor.mode} />
+                </>
               )}
             </div>
             <div className="app-shell__panel">

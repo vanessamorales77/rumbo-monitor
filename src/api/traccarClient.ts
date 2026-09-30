@@ -9,6 +9,8 @@ import {
 const REQUEST_TIMEOUT_MS = 10_000
 const POLL_INTERVAL_MS = 5_000
 const WS_RETRY_MS = 15_000
+/** Consecutive failed polls before the feed is reported as lost (~10 s). */
+const LOST_AFTER_FAILURES = 2
 
 interface TraccarConfig {
   /** Empty string = same origin (Vite proxy in dev, rewrite/Worker in prod). */
@@ -67,43 +69,85 @@ export function createTraccarSource(config: TraccarConfig): TelemetrySource {
     return `${origin.replace(/^http/, 'ws')}/api/socket`
   }
 
-  return {
-    async connect() {
-      await request('/api/session', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({ email, password }),
+  let signingIn: Promise<void> | undefined
+  /** Concurrent callers share one sign-in. */
+  const signIn = () => {
+    signingIn ??= request<unknown>('/api/session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ email, password }),
+    })
+      .then(() => undefined)
+      .finally(() => {
+        signingIn = undefined
       })
-    },
+    return signingIn
+  }
+
+  /** The session cookie can expire mid-shift: on a 401, sign in again once and retry. */
+  async function authed<T>(path: string): Promise<T> {
+    try {
+      return await request<T>(path)
+    } catch (error) {
+      if (!(error instanceof TelemetryError) || error.kind !== 'auth') throw error
+      await signIn()
+      return request<T>(path)
+    }
+  }
+
+  return {
+    connect: signIn,
 
     async getDevices() {
-      return (await request<RawDevice[]>('/api/devices')).map(toDevice)
+      return (await authed<RawDevice[]>('/api/devices')).map(toDevice)
     },
 
     getPositions() {
-      return request<Position[]>('/api/positions')
+      return authed<Position[]>('/api/positions')
     },
 
-    /** WebSocket first; if it drops, poll every 5 s while retrying the socket in the background. */
+    /** WebSocket first; if it drops, poll every 5 s while retrying the socket in the background.
+     *  Polling that keeps failing is reported as 'lost' so the UI can warn that data is stale. */
     subscribe(handlers: FeedHandlers) {
       let socket: WebSocket | null = null
       let pollTimer: ReturnType<typeof setInterval> | undefined
       let retryTimer: ReturnType<typeof setTimeout> | undefined
       let disposed = false
+      let polling = false
+      let failures = 0
+
+      const poll = async () => {
+        if (polling) return
+        polling = true
+        try {
+          const [devices, positions] = await Promise.all([
+            authed<RawDevice[]>('/api/devices'),
+            authed<Position[]>('/api/positions'),
+          ])
+          if (disposed || pollTimer === undefined) return
+          failures = 0
+          devices.map(toDevice).forEach(handlers.onDevice)
+          positions.forEach(handlers.onPosition)
+          handlers.onMode('polling')
+        } catch {
+          failures += 1
+          if (!disposed && pollTimer !== undefined && failures >= LOST_AFTER_FAILURES) handlers.onMode('lost')
+        } finally {
+          polling = false
+        }
+      }
 
       const startPolling = () => {
-        handlers.onMode('polling')
         if (pollTimer) return
-        pollTimer = setInterval(() => {
-          request<Position[]>('/api/positions')
-            .then((positions) => positions.forEach(handlers.onPosition))
-            .catch(() => undefined)
-        }, POLL_INTERVAL_MS)
+        handlers.onMode('polling')
+        pollTimer = setInterval(() => void poll(), POLL_INTERVAL_MS)
+        void poll()
       }
 
       const stopPolling = () => {
         clearInterval(pollTimer)
         pollTimer = undefined
+        failures = 0
       }
 
       const open = () => {
@@ -120,9 +164,11 @@ export function createTraccarSource(config: TraccarConfig): TelemetrySource {
           handlers.onMode('live')
         }
         socket.onmessage = (event) => {
-          const data = JSON.parse(event.data as string) as {
-            devices?: RawDevice[]
-            positions?: Position[]
+          let data: { devices?: RawDevice[]; positions?: Position[] }
+          try {
+            data = JSON.parse(event.data as string)
+          } catch {
+            return // a malformed frame must not take the feed down
           }
           data.devices?.map(toDevice).forEach(handlers.onDevice)
           data.positions?.forEach(handlers.onPosition)
