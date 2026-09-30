@@ -75,20 +75,48 @@
     padding: 0 var(--space-6);
   }
 
+  /* Two columns in a grid whose row is at least as tall as the card: the card is never clipped
+     (the page scrolls instead) and the map always matches the row height. */
   .app-shell__main {
-    flex-direction: row;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) var(--panel-width);
+    grid-template-rows: minmax(min-content, 1fr);
     gap: var(--space-5);
     padding: var(--space-5) var(--space-6);
-    overflow: hidden;
+    overflow-y: auto;
   }
 
   .app-shell__map {
-    flex: 1;
     min-height: 0;
   }
 
   .app-shell__panel {
-    width: var(--panel-width);
-    align-self: flex-start;
+    align-self: start;
+  }
+
+  .app-shell__main > .error-state {
+    grid-column: 1 / -1;
+    justify-self: center;
+  }
+}
+
+/* Tablet: map and card share exactly the same height. */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .app-shell__main {
+    grid-template-columns: minmax(0, 1fr) 21rem;
+  }
+
+  .app-shell__panel {
+    display: flex;
+    align-self: stretch;
+  }
+
+  .app-shell__panel > .status-card {
+    flex: 1;
+  }
+
+  .app-shell__panel .status-card__data {
+    flex: 1;
+    justify-content: space-between;
   }
 }
