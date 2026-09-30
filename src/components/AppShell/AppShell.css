@@ -90,22 +90,7 @@
     min-height: 0;
   }
 
-  .app-shell__panel {
-    align-self: start;
-  }
-
-  .app-shell__main > .error-state {
-    grid-column: 1 / -1;
-    justify-self: center;
-  }
-}
-
-/* Tablet: map and card share exactly the same height. */
-@media (min-width: 768px) and (max-width: 1023px) {
-  .app-shell__main {
-    grid-template-columns: minmax(0, 1fr) 21rem;
-  }
-
+  /* Map and card always share exactly the same height; the card spreads its rows evenly. */
   .app-shell__panel {
     display: flex;
     align-self: stretch;
@@ -118,5 +103,17 @@
   .app-shell__panel .status-card__data {
     flex: 1;
     justify-content: space-between;
+  }
+
+  .app-shell__main > .error-state {
+    grid-column: 1 / -1;
+    justify-self: center;
+  }
+}
+
+/* Tablet: a slightly narrower card leaves more room for the map. */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .app-shell__main {
+    grid-template-columns: minmax(0, 1fr) 21rem;
   }
 }
