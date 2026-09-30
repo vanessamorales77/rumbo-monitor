@@ -10,8 +10,10 @@
  * --unit is how the server reads the `speed` parameter. Traccar's OsmAnd endpoint expects knots (default, verified against the app); kmh and ms exist for debugging.
  * Requires Node 22.18+ (runs TypeScript natively).
  *
- * Mind the budget: the Traccar demo server stopped storing positions after ~5,000 in one (UTC) day
- * for this account. Three vehicles every 3 s burn that in ~80 minutes; every 10 s lasts ~4.6 hours.
+ * Mind the budget: the Traccar demo servers cap stored positions at roughly 1,500 per device per day
+ * (unofficial; the exact reset time is unknown). Each of our devices hit exactly 1,500 twice. At 3 s
+ * that is reached in 75 minutes, at 10 s in ~4 hours, at 30 s in ~12 hours. Every vehicle has its own
+ * budget, so three vehicles do not share it.
  * Run it only while working or recording.
  */
 import { readFileSync } from 'node:fs'
