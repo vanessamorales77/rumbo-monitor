@@ -5,7 +5,7 @@ import { ErrorState } from './ErrorState'
 const meta = {
   title: 'Componentes/Estado de error',
   component: ErrorState,
-  args: { onRetry: fn() },
+  args: { onRetry: fn(), onDemo: fn() },
   parameters: {
     docs: {
       description: {

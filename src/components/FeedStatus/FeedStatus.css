@@ -1,14 +1,24 @@
 /* Sits over the map, top-left; the zoom controls are bottom-right so nothing collides. */
-.feed-status {
-  --feed-color: var(--color-success);
+.feed-overlay {
   position: absolute;
   top: var(--space-4);
   left: var(--space-4);
   z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+  max-width: calc(100% - var(--space-4) * 2);
+  /* Only the button takes clicks; the rest lets the map be dragged underneath. */
+  pointer-events: none;
+}
+
+.feed-status {
+  --feed-color: var(--color-success);
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
-  max-width: calc(100% - var(--space-4) * 2);
+  max-width: 100%;
   padding: var(--space-1) var(--space-3);
   border: 1px solid var(--color-border-strong);
   border-radius: var(--radius-full);
@@ -18,16 +28,21 @@
   font-weight: var(--font-weight-medium);
   line-height: 20px;
   color: var(--color-text);
-  pointer-events: none;
 }
 
-.feed-status--polling {
+.feed-status--polling,
+.feed-status--stale {
   --feed-color: var(--color-warning);
 }
 
 .feed-status--lost {
   --feed-color: var(--color-danger);
   border-color: var(--color-danger);
+}
+
+.feed-status--demo {
+  --feed-color: var(--color-accent);
+  border-color: var(--color-accent);
 }
 
 .feed-status__dot {
@@ -39,10 +54,42 @@
   transition: background-color var(--duration-base) var(--ease-standard);
 }
 
+/* Demo mode: a diamond instead of a dot, so "simulated" never looks like a healthy live feed. */
+.feed-status--demo .feed-status__dot {
+  border-radius: 2px;
+  transform: rotate(45deg);
+}
+
+.feed-overlay__action {
+  pointer-events: auto;
+  min-height: var(--tap-target);
+  padding: 0 var(--space-4);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+  cursor: pointer;
+  transition:
+    color var(--duration-fast) var(--ease-standard),
+    border-color var(--duration-fast) var(--ease-standard);
+}
+
+.feed-overlay__action:hover {
+  color: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
 @media (max-width: 767px) {
-  .feed-status {
+  .feed-overlay {
     top: var(--space-3);
     left: var(--space-3);
-    max-width: calc(100% - var(--space-3) * 2);
+    max-width: calc(100% - var(--space-3) * 2 - 48px);
+  }
+
+  .feed-overlay__action {
+    min-height: 36px;
   }
 }

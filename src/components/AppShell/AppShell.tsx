@@ -40,7 +40,11 @@ export function AppShell() {
 
       <main id="main" className="app-shell__main" aria-busy={phase === 'loading'}>
         {phase === 'error' && monitor.errorKind ? (
-          <ErrorState kind={monitor.errorKind} onRetry={monitor.retry} />
+          <ErrorState
+            kind={monitor.errorKind}
+            onRetry={monitor.retry}
+            onDemo={monitor.canToggleDemo ? monitor.enterDemo : undefined}
+          />
         ) : (
           <>
             <div className="app-shell__map">
@@ -49,7 +53,13 @@ export function AppShell() {
               ) : (
                 <>
                   <VehicleMap device={monitor.selectedDevice} position={monitor.selectedPosition} />
-                  <FeedStatus mode={monitor.mode} />
+                  <FeedStatus
+                    mode={monitor.mode}
+                    lastFix={monitor.selectedPosition?.fixTime ?? null}
+                    demo={monitor.isDemo}
+                    onEnterDemo={monitor.canToggleDemo ? monitor.enterDemo : undefined}
+                    onExitDemo={monitor.canToggleDemo && monitor.demoRequested ? monitor.exitDemo : undefined}
+                  />
                 </>
               )}
             </div>

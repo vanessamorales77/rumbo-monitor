@@ -10,7 +10,7 @@ import type { TelemetrySource } from './types'
  */
 export function createSource(): TelemetrySource {
   const env = import.meta.env
-  if (env.VITE_USE_MOCK === 'true') return createMockSource()
+  if (isMockBuild) return createMockSource()
   return createTraccarSource({
     baseUrl: env.VITE_TRACCAR_BASE ?? '',
     email: env.VITE_TRACCAR_EMAIL ?? '',
@@ -18,4 +18,8 @@ export function createSource(): TelemetrySource {
   })
 }
 
+/** True when the whole build runs on simulated data (VITE_USE_MOCK). */
+export const isMockBuild = import.meta.env.VITE_USE_MOCK === 'true'
+
+export { createMockSource }
 export * from './types'

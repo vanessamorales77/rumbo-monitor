@@ -4,11 +4,15 @@
  * Vehicles follow real street routes (src/api/demoRoutes.json), never straight lines over water.
  *
  *   npm run simulate
- *   npm run simulate -- --host=demo4.traccar.org --interval=3
+ *   npm run simulate -- --host=demo4.traccar.org --interval=10
  *
  * Devices must already exist in Traccar with the identifiers listed below.
  * --unit is how the server reads the `speed` parameter. Traccar's OsmAnd endpoint expects knots (default, verified against the app); kmh and ms exist for debugging.
  * Requires Node 22.18+ (runs TypeScript natively).
+ *
+ * Mind the budget: the Traccar demo server stopped storing positions after ~5,000 in one (UTC) day
+ * for this account. Three vehicles every 3 s burn that in ~80 minutes; every 10 s lasts ~4.6 hours.
+ * Run it only while working or recording.
  */
 import { readFileSync } from 'node:fs'
 import { createWalker, type LatLon } from '../src/api/routeWalker.ts'
@@ -22,7 +26,7 @@ const args = Object.fromEntries(
 
 const HOST = args.host ?? 'demo4.traccar.org'
 const PORT = args.port ?? '5055'
-const INTERVAL_S = Number(args.interval ?? 3)
+const INTERVAL_S = Number(args.interval ?? 10)
 const UNIT = args.unit ?? 'kn'
 
 const KMH_TO: Record<string, number> = { kmh: 1, kn: 1 / 1.852, ms: 1 / 3.6 }

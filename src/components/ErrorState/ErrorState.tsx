@@ -21,7 +21,14 @@ const COPY: Record<ErrorKind, { title: string; body: string }> = {
   },
 }
 
-export function ErrorState({ kind, onRetry }: { kind: ErrorKind; onRetry: () => void }) {
+interface Props {
+  kind: ErrorKind
+  onRetry: () => void
+  /** When provided, offers to look at the app with simulated data meanwhile. */
+  onDemo?: () => void
+}
+
+export function ErrorState({ kind, onRetry, onDemo }: Props) {
   const { title, body } = COPY[kind]
   const headingRef = useRef<HTMLHeadingElement>(null)
 
@@ -45,6 +52,11 @@ export function ErrorState({ kind, onRetry }: { kind: ErrorKind; onRetry: () => 
       <button type="button" className="error-state__retry" onClick={onRetry}>
         Reintentar
       </button>
+      {onDemo && (
+        <button type="button" className="error-state__secondary" onClick={onDemo}>
+          Ver modo demostración
+        </button>
+      )}
     </section>
   )
 }

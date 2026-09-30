@@ -1,14 +1,26 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { createSource, TelemetryError, type Device, type ErrorKind, type FeedMode, type Position } from '../api'
+import {
+  createMockSource,
+  createSource,
+  isMockBuild,
+  TelemetryError,
+  type Device,
+  type ErrorKind,
+  type FeedMode,
+  type Position,
+} from '../api'
 
 export type Phase = 'loading' | 'ready' | 'error'
 
 /**
  * Owns the whole data lifecycle: connect → load devices + latest positions → live updates.
  * `retry()` re-runs the sequence from scratch.
+ * `enterDemo()` swaps the real feed for the local simulator (always labelled as such in the UI);
+ * `exitDemo()` goes back to Traccar.
  */
 export function useMonitor() {
-  const source = useMemo(() => createSource(), [])
+  const [demoRequested, setDemoRequested] = useState(false)
+  const source = useMemo(() => (demoRequested ? createMockSource() : createSource()), [demoRequested])
   const [attempt, setAttempt] = useState(0)
   const [phase, setPhase] = useState<Phase>('loading')
   const [errorKind, setErrorKind] = useState<ErrorKind | null>(null)
@@ -59,8 +71,38 @@ export function useMonitor() {
     setAttempt((n) => n + 1)
   }, [])
 
+  /** Start over with a different source: nothing from the previous one may linger on screen. */
+  const switchSource = useCallback((demo: boolean) => {
+    setPhase('loading')
+    setErrorKind(null)
+    setDevices([])
+    setPositions({})
+    setSelectedId(null)
+    setMode('live')
+    setDemoRequested(demo)
+  }, [])
+  const enterDemo = useCallback(() => switchSource(true), [switchSource])
+  const exitDemo = useCallback(() => switchSource(false), [switchSource])
+
   const selectedDevice = devices.find((d) => d.id === selectedId) ?? null
   const selectedPosition = selectedId === null ? null : (positions[selectedId] ?? null)
 
-  return { phase, errorKind, devices, selectedId, selectedDevice, selectedPosition, mode, select: setSelectedId, retry }
+  return {
+    phase,
+    errorKind,
+    devices,
+    selectedId,
+    selectedDevice,
+    selectedPosition,
+    mode,
+    select: setSelectedId,
+    retry,
+    /** Data on screen is simulated (by the user's choice, or because the whole build is a mock). */
+    isDemo: demoRequested || isMockBuild,
+    /** The user can switch between real and simulated data (not in a build that is simulated throughout). */
+    canToggleDemo: !isMockBuild,
+    demoRequested,
+    enterDemo,
+    exitDemo,
+  }
 }
