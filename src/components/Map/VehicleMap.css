@@ -114,3 +114,25 @@
   outline-offset: 0;
   border-radius: var(--radius-full);
 }
+
+/* Mobile: the map is small, so the zoom buttons shrink (36px, still above the 24px WCAG 2.2 minimum). */
+@media (max-width: 767px) {
+  .vehicle-map .leaflet-bar {
+    gap: var(--space-1);
+  }
+
+  .vehicle-map .leaflet-bar a {
+    width: 36px;
+    height: 36px;
+    font-size: 18px;
+    border-radius: 10px;
+  }
+
+  .vehicle-map .leaflet-right .leaflet-control {
+    margin-right: var(--space-3);
+  }
+
+  .vehicle-map .leaflet-bottom .leaflet-control {
+    margin-bottom: var(--space-3);
+  }
+}
