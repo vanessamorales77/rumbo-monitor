@@ -10,7 +10,12 @@
     "preview": "vite preview",
     "simulate": "node scripts/simulate.ts",
     "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build"
+    "build-storybook": "storybook build",
+    "test": "node --test \"worker/test/*.test.ts\"",
+    "typecheck:worker": "tsc -p worker/tsconfig.json",
+    "worker:dev": "npx --yes wrangler@4 dev --config worker/wrangler.jsonc",
+    "worker:deploy": "npx --yes wrangler@4 deploy --config worker/wrangler.jsonc",
+    "check:proxy": "node scripts/check-proxy.ts"
   },
   "dependencies": {
     "@fontsource/barlow-condensed": "^5.3.0",

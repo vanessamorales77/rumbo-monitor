@@ -1,0 +1,15 @@
+{
+  // Rumbo's proxy to Traccar. Deploy with `npm run worker:deploy` (see the README, section "Despliegue").
+  "name": "rumbo-proxy",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-09-01",
+  "workers_dev": true,
+  "vars": {
+    // The Traccar server this Worker talks to. Each demo server is a separate installation with its own accounts.
+    "TRACCAR_URL": "https://demo4.traccar.org",
+    // Origins of the app that may call the Worker (CORS and WebSocket origin check), comma-separated.
+    // Add your public URL here before deploying, e.g. "http://localhost:5173,https://tu-app.vercel.app".
+    "ALLOWED_ORIGINS": "http://localhost:5173"
+  }
+  // Secrets (never written in this file): npx wrangler secret put TRACCAR_EMAIL / TRACCAR_PASSWORD
+}

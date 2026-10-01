@@ -27,3 +27,7 @@ dist-ssr
 
 *storybook.log
 storybook-static
+
+# Cloudflare Worker (local secrets and wrangler state)
+.dev.vars
+.wrangler

@@ -1,0 +1,4 @@
+# Copy to worker/.dev.vars (it is git-ignored) to run the Worker locally with `npm run worker:dev`.
+# In production these are secrets: `npx wrangler secret put TRACCAR_EMAIL` and `TRACCAR_PASSWORD`.
+TRACCAR_EMAIL=
+TRACCAR_PASSWORD=

@@ -18,6 +18,7 @@ Repositorio: <https://github.com/vanessamorales77/rumbo-monitor>
 | Mapa | Leaflet (marcador SVG propio) |
 | Estilos | CSS tradicional con _custom properties_ (tokens), sin framework de UI |
 | Tipografía | Inter (interfaz) y Barlow Condensed (solo la cifra de velocidad), autoalojadas con `@fontsource` (sin peticiones a terceros) |
+| Proxy a Traccar | Cloudflare Worker (un archivo, sin dependencias) con pruebas de `node:test` |
 | Lint | Oxlint |
 | Documentación de componentes | Storybook 10 (con el addon de accesibilidad) |
 
@@ -76,7 +77,7 @@ Todos relativos a `VITE_TRACCAR_BASE` (o al mismo origen):
 
 ### CORS en desarrollo
 
-Los servidores de demostración no envían `Access-Control-Allow-Origin`, así que el navegador bloquea las llamadas directas desde otro origen. En desarrollo, Vite hace de proxy de `/api` (incluido el WebSocket) hacia `TRACCAR_TARGET` y reescribe cookies y cabecera `Origin` ([vite.config.ts](vite.config.ts)). Para producción hace falta un equivalente, ver [Despliegue](#despliegue).
+Los servidores de demostración no envían `Access-Control-Allow-Origin`, así que el navegador bloquea las llamadas directas desde otro origen. En desarrollo, Vite hace de proxy de `/api` (incluido el WebSocket) hacia `TRACCAR_TARGET` y reescribe cookies y cabecera `Origin` ([vite.config.ts](vite.config.ts)). En producción ese papel lo hace un Worker de Cloudflare ([worker/](worker/)), que además guarda la cuenta de Traccar para que no viaje en el navegador. Ver [Despliegue](#despliegue).
 
 ## Simulador de datos para Traccar
 
@@ -166,6 +167,11 @@ npm run build-storybook
 | `npm run simulate` | Envía posiciones simuladas a Traccar |
 | `npm run storybook` | Storybook en desarrollo |
 | `npm run build-storybook` | Genera Storybook estático en `storybook-static/` |
+| `npm test` | Pruebas del Worker (`node:test`, sin dependencias) |
+| `npm run typecheck:worker` | Comprueba los tipos del Worker |
+| `npm run worker:dev` | Ejecuta el Worker en local con `wrangler` (necesita `worker/.dev.vars`) |
+| `npm run worker:deploy` | Publica el Worker en Cloudflare |
+| `npm run check:proxy -- <worker> <app>` | Comprueba desde fuera un Worker ya publicado |
 
 ## Estructura
 
@@ -178,26 +184,75 @@ src/
 ├── hooks/          useMonitor (ciclo de datos), useTheme, useNow, useTweenedNumber
 ├── styles/         tokens, temas, base y overrides (alto contraste e impresión)
 └── utils/          unidades, tiempo relativo, estado y antigüedad de los datos, nombre del vehículo, movimiento
-scripts/            Simulador de posiciones para Traccar
+scripts/            Simulador de posiciones para Traccar y comprobación del proxy publicado
+worker/             Proxy a Traccar para producción (Cloudflare Worker) y sus pruebas
 .storybook/         Configuración de Storybook (alternancia de tema)
 ```
 
 ## Despliegue
 
-_Pendiente._ En producción la app necesita que `/api` (REST **y** WebSocket) llegue a Traccar desde su mismo origen o desde uno que añada CORS, porque los servidores de demostración no envían `Access-Control-Allow-Origin`. Un _rewrite_ de Vercel o Netlify cubre el REST, pero **no** el WebSocket; para el tiempo real hace falta un proxy que lo soporte (por ejemplo un Worker de Cloudflare), con `VITE_TRACCAR_BASE` apuntando a él. Si no hay proxy de WebSocket, la app sigue funcionando: cae a _polling_ cada 5 s.
+La app se publica en **Vercel** (estática) y habla con Traccar a través de un **Worker de Cloudflare** ([worker/](worker/)). Todo cabe en los planes gratuitos y no pide tarjeta.
 
-Antes de publicar:
+```
+Navegador ──► Vercel (la app, HTML/JS/CSS)
+   │
+   └──────────► Cloudflare Worker ──► Traccar (demo4.traccar.org)
+                  inicia la sesión,
+                  reenvía REST y WebSocket
+```
 
-- Usa `VITE_USE_MOCK=false` si quieres datos reales; con `true` toda la app es simulada y se rotula como modo demostración.
-- Las credenciales `VITE_TRACCAR_*` quedan dentro del código público. Usa una cuenta de demostración **con una contraseña que no repitas en ningún otro sitio**, o deja que el proxy inicie la sesión en el servidor.
-- Quien abra la app sin que el simulador esté enviando verá posiciones viejas: el estado «Sin datos nuevos» y el modo demostración existen para ese caso.
+**Por qué hace falta un Worker.** Los servidores de demostración de Traccar no envían CORS, y los _rewrites_ de Vercel o Netlify no sirven para un WebSocket. El Worker resuelve las dos cosas y además **guarda la cuenta de Traccar como secreto**: el navegador no ve ni la contraseña ni la cookie de sesión (en la app solo se ve la llamada `POST /api/session`, que el Worker responde con `{"authenticated": true}` tras iniciar sesión de verdad en Traccar).
+
+**No es un proxy abierto.** Como entra a Traccar con tu cuenta, solo reenvía lo que la app necesita: `POST /api/session`, `GET /api/devices`, `GET /api/positions` y el WebSocket `/api/socket`. Cualquier otra ruta o método (crear o borrar dispositivos, leer usuarios…) devuelve 404 o 405 sin llegar a Traccar. Responde con CORS solo a los orígenes de `ALLOWED_ORIGINS` y, en el WebSocket, rechaza un `Origin` ajeno. Esto limita qué puede hacer cualquiera con la URL del Worker, pero **no** la oculta: cualquiera puede leer los datos de esa cuenta de demostración (que son datos simulados).
+
+### Paso a paso
+
+1. **Worker (Cloudflare).** Crea una cuenta gratuita en <https://dash.cloudflare.com/sign-up> y, desde la carpeta del proyecto:
+   ```bash
+   npx wrangler login                      # abre el navegador para autorizar
+   npm run worker:deploy                   # publica y muestra la URL del Worker
+   npx wrangler secret put TRACCAR_EMAIL    --config worker/wrangler.jsonc
+   npx wrangler secret put TRACCAR_PASSWORD --config worker/wrangler.jsonc
+   ```
+   Los dos últimos comandos te piden el valor por la terminal: no lo escribas en ningún archivo ni en un chat. La primera vez, Cloudflare te pide elegir un subdominio `workers.dev`. La URL queda como `https://rumbo-proxy.<tu-subdominio>.workers.dev`.
+2. **App (Vercel).** En <https://vercel.com/new> importa el repositorio de GitHub. Vercel detecta Vite; en _Environment Variables_ añade:
+
+   | Variable | Valor |
+   | --- | --- |
+   | `VITE_USE_MOCK` | `false` |
+   | `VITE_TRACCAR_BASE` | la URL del Worker, sin `/` final |
+
+   **No pongas** `VITE_TRACCAR_EMAIL` ni `VITE_TRACCAR_PASSWORD` en Vercel: la cuenta vive en el Worker. Despliega y copia la URL de producción (por ejemplo `https://rumbo-monitor.vercel.app`).
+3. **Autoriza el origen de la app.** Edita `ALLOWED_ORIGINS` en [worker/wrangler.jsonc](worker/wrangler.jsonc) con esa URL, **exacta y sin `/` final** (puedes dejar también `http://localhost:5173`), y vuelve a publicar con `npm run worker:deploy`. Los secretos se conservan. Solo la URL de producción queda autorizada: las URL de vista previa de Vercel (`...-git-rama-...vercel.app`) no.
+4. **Comprueba.**
+   ```bash
+   npm run check:proxy -- https://rumbo-proxy.<tu-subdominio>.workers.dev https://rumbo-monitor.vercel.app
+   ```
+   Prueba, desde fuera, el inicio de sesión, la lista de dispositivos, el CORS, que se rechacen un origen ajeno y las rutas prohibidas, y el apretón de manos del WebSocket. Después abre la URL de la app y mira que el indicador diga «Datos en vivo».
+
+### Para que haya datos que ver
+
+La app muestra lo que haya en Traccar: **si el simulador no está enviando posiciones, quien la abra verá posiciones viejas** (y el aviso «Sin datos nuevos», con el modo demostración a un clic). Para una evaluación en vivo, deja `npm run simulate` corriendo mientras tanto, teniendo en cuenta el presupuesto diario de posiciones (ver [Simulador](#simulador-de-datos-para-traccar)).
+
+### Probar el Worker en local
+
+```bash
+cp worker/.dev.vars.example worker/.dev.vars   # y completa TRACCAR_EMAIL y TRACCAR_PASSWORD
+npm run worker:dev                              # http://127.0.0.1:8787
+```
+
+Con `VITE_TRACCAR_BASE=http://127.0.0.1:8787` y `http://localhost:5173` en `ALLOWED_ORIGINS`, `npm run dev` usa el Worker en lugar del proxy de Vite. `npm test` ejecuta las pruebas del Worker sin red (Traccar simulado): lista de rutas permitidas, CORS, inicio de sesión único para llamadas simultáneas, renovación de una sesión caducada, 502 si Traccar no responde y control de origen del WebSocket. El WebSocket de extremo a extremo se probó además sobre `workerd`, el motor real de Cloudflare.
+
+### Límites del plan gratuito
+
+El plan gratuito de Workers admite 100.000 peticiones al día (consulta los límites actuales en Cloudflare). Con el WebSocket funcionando, cada visitante hace unas pocas; si el WebSocket cayera y la app pasara a _polling_, serían unas 17.000 al día por pestaña abierta.
 
 ## Notas y límites conocidos
 
 - Los _tiles_ de OpenStreetMap sirven para una demostración, pero su [política de uso](https://operations.osmfoundation.org/policies/tiles/) no cubre tráfico real; para eso, configura `VITE_TILE_URL` con un proveedor con clave.
 - Los servidores públicos de Traccar son compartidos: pueden caerse un momento o limitar el almacenamiento (ver el presupuesto del simulador).
 - La antigüedad de una posición ("sin datos nuevos") se calcula con el reloj del navegador. Si el equipo del operador va desfasado más de 2 minutos respecto al servidor, los datos pueden verse como viejos aunque lleguen en vivo, o al revés.
-- No hay pruebas automáticas todavía.
+- Hay pruebas automáticas del Worker (`npm test`), pero no de la interfaz: esa se verifica con Storybook, axe-core y revisión manual.
 
 ## Uso de IA
 
