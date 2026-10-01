@@ -105,7 +105,7 @@ npm run simulate -- --host=demo4.traccar.org --interval=10
 | **Cargando** | Esqueletos de mapa y tarjeta con las mismas clases y alturas que el contenido real, para evitar saltos de layout (CLS). El `<main>` marca `aria-busy` |
 | **Error** | Pantalla con mensaje distinto según la causa (red, tiempo agotado, credenciales, servidor), foco en el título y botón **Reintentar** de 44 px. Ofrece además ver el modo demostración |
 | **En vivo / Polling** | Indicador sobre el mapa: "En vivo" (WebSocket) o "Actualizando cada 5 s" |
-| **Sin datos nuevos** | Un vehículo que figura en línea, pero cuya última posición tiene más de 2 minutos. Un vehículo sin conexión no activa este aviso (su antigüedad ya está en la tarjeta) |
+| **Sin datos nuevos / Ningún vehículo en línea** | El aviso es sobre **la flota**, no sobre el vehículo seleccionado: aparece si ningún vehículo figura en línea ("Ningún vehículo en línea") o si el más reciente de los que sí lo están lleva más de 2 minutos sin reportar. Un solo vehículo quieto o sin conexión no lo activa (su antigüedad ya está en la tarjeta). En ambos casos se ofrece el modo demostración |
 | **Sin conexión** | El _polling_ falla: "Sin conexión · datos desactualizados" |
 | **Modo demostración** | Datos simulados, siempre rotulados y con un rombo en lugar de un punto, para que nunca parezcan datos reales. Se puede volver a los reales |
 | **Sin señal / sin datos nuevos** | La velocidad **no es cero**: sin conexión (o con una posición de más de 2 minutos) no se sabe, y el vehículo podría seguir moviéndose. En el arco se lee "Sin señal" (offline) o "Sin datos nuevos", con "Última: N km/h" debajo como dato histórico |

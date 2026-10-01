@@ -84,6 +84,17 @@ export function useMonitor() {
   const enterDemo = useCallback(() => switchSource(true), [switchSource])
   const exitDemo = useCallback(() => switchSource(false), [switchSource])
 
+  /** How the whole fleet is doing, independent of which vehicle is selected. */
+  const fleet = useMemo(() => {
+    const online = devices.filter((d) => d.status === 'online')
+    let freshestFix: string | null = null
+    for (const device of online) {
+      const fix = positions[device.id]?.fixTime
+      if (fix && (freshestFix === null || Date.parse(fix) > Date.parse(freshestFix))) freshestFix = fix
+    }
+    return { online: online.length, freshestFix }
+  }, [devices, positions])
+
   const selectedDevice = devices.find((d) => d.id === selectedId) ?? null
   const selectedPosition = selectedId === null ? null : (positions[selectedId] ?? null)
 
@@ -95,6 +106,7 @@ export function useMonitor() {
     selectedDevice,
     selectedPosition,
     mode,
+    fleet,
     select: setSelectedId,
     retry,
     /** Data on screen is simulated (by the user's choice, or because the whole build is a mock). */

@@ -8,7 +8,7 @@ const ago = (seconds: number) => new Date(Date.now() - seconds * 1000).toISOStri
 const meta = {
   title: 'Componentes/Estado del flujo',
   component: FeedStatus,
-  args: { mode: 'live', lastFix: ago(4), demo: false, onEnterDemo: fn(), onExitDemo: fn() },
+  args: { mode: 'live', onlineCount: 3, lastFix: ago(4), demo: false, onEnterDemo: fn(), onExitDemo: fn() },
   decorators: [
     // The side-by-side story lays itself out (parameters.fullWidth), so it skips this fixed frame.
     (Story, { parameters }) =>
@@ -38,6 +38,10 @@ export const Polling: Story = { name: 'Polling', args: { mode: 'polling' } }
 export const SinDatosNuevos: Story = {
   name: 'Sin datos nuevos',
   args: { mode: 'live', lastFix: ago(6 * 3600) },
+}
+export const NingunoEnLinea: Story = {
+  name: 'Ningún vehículo en línea',
+  args: { mode: 'live', onlineCount: 0, lastFix: null },
 }
 export const Perdido: Story = { name: 'Sin conexión', args: { mode: 'lost' } }
 export const Demostracion: Story = { name: 'Modo demostración', args: { demo: true } }
@@ -88,6 +92,7 @@ const feedStates: Array<{ label: string; args: NonNullable<Story['args']> }> = [
   { label: 'En vivo', args: { mode: 'live' } },
   { label: 'Polling', args: { mode: 'polling' } },
   { label: 'Sin datos nuevos', args: { mode: 'live', lastFix: ago(6 * 3600) } },
+  { label: 'Ningún vehículo en línea', args: { mode: 'live', onlineCount: 0, lastFix: null } },
   { label: 'Sin conexión', args: { mode: 'lost' } },
   { label: 'Modo demostración', args: { demo: true } },
 ]

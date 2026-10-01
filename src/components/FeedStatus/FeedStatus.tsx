@@ -8,8 +8,10 @@ type Kind = FeedMode | 'stale' | 'demo'
 
 interface Props {
   mode: FeedMode
-  /** ISO time of the last position of the selected vehicle, only if it reports as online: an offline or
-   *  idle vehicle is not a feed problem, and its age is already on the status card. */
+  /** How many vehicles of the fleet report as online. */
+  onlineCount: number
+  /** ISO time of the freshest position among the online vehicles. The warning is about the whole fleet:
+   *  one idle or offline vehicle is not a feed problem, and its own age is already on the status card. */
   lastFix: string | null
   /** The data on screen is simulated. */
   demo: boolean
@@ -24,16 +26,19 @@ interface Props {
  * Connected is not the same as fresh: a live socket can still deliver nothing new.
  * Dot + text, never colour alone; changes are announced politely.
  */
-export function FeedStatus({ mode, lastFix, demo, onEnterDemo, onExitDemo }: Props) {
+export function FeedStatus({ mode, onlineCount, lastFix, demo, onEnterDemo, onExitDemo }: Props) {
   const now = useNow(10_000)
-  const stale = !demo && mode !== 'lost' && lastFix !== null && isStale(lastFix, now)
+  const quiet = onlineCount === 0
+  const stale = !demo && mode !== 'lost' && (quiet || (lastFix !== null && isStale(lastFix, now)))
   const kind: Kind = demo ? 'demo' : stale ? 'stale' : mode
 
   const text: Record<Kind, string> = {
     live: 'En vivo',
     polling: 'Actualizando cada 5 s',
     lost: 'Sin conexión · datos desactualizados',
-    stale: `Sin datos nuevos · ${lastFix ? formatRelative(lastFix, now).toLowerCase() : ''}`,
+    stale: quiet
+      ? 'Ningún vehículo en línea'
+      : `Sin datos nuevos · ${lastFix ? formatRelative(lastFix, now).toLowerCase() : ''}`,
     demo: 'Modo demostración · datos simulados',
   }
 
