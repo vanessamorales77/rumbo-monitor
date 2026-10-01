@@ -80,14 +80,14 @@ Los servidores de demostración no envían `Access-Control-Allow-Origin`, así q
 
 ## Simulador de datos para Traccar
 
-[scripts/simulate.ts](scripts/simulate.ts) envía posiciones simuladas a tu servidor de Traccar por el endpoint OsmAnd (puerto 5055), para ver la app con datos reales y en movimiento sin rastreadores físicos. Los vehículos siguen rutas por calles reales ([demoRoutes.json](src/api/demoRoutes.json)).
+[scripts/simulate.ts](scripts/simulate.ts) envía posiciones simuladas a tu servidor de Traccar por el endpoint OsmAnd (puerto 5055), para ver la app con datos reales y en movimiento sin rastreadores físicos. Los vehículos siguen rutas por calles reales ([demoRoutes.json](src/api/demoRoutes.json)): tres circuitos de Bogotá calculados una sola vez con [OSRM](https://project-osrm.org/) sobre datos de [OpenStreetMap](https://www.openstreetmap.org/copyright) (© colaboradores de OpenStreetMap) y guardados como datos fijos, así que el simulador no depende de ningún servicio para funcionar.
 
 ```bash
 npm run simulate
 npm run simulate -- --host=demo4.traccar.org --interval=10
 ```
 
-**Presupuesto de posiciones.** Los servidores de demostración parecen guardar como máximo unas 1.500 posiciones por dispositivo y por día (dato no oficial; la hora de reinicio es desconocida). Pasado ese tope siguen aceptando mensajes y marcando el dispositivo como _online_, pero dejan de guardar posiciones. Con `--interval=3` se agota en 75 minutos, con 10 s en unas 4 horas y con 30 s en unas 12. Conviene dejarlo corriendo solo mientras se trabaja o se graba.
+**Presupuesto de posiciones.** Los servidores de demostración guardan como máximo unas 1.500 posiciones por dispositivo y por día (dato no oficial; el foro de Traccar habla de ese mismo tope). Se comprobó con los datos de la cuenta: el 30 de septiembre cada vehículo se detuvo en exactamente 1.500 posiciones y, al día siguiente, el servidor volvió a guardar, así que el cupo se renueva a diario; la hora exacta del reinicio no se conoce. Pasado el tope, el servidor sigue aceptando mensajes y marcando el dispositivo como _online_, pero deja de guardar posiciones (lo que se ve en la app es justo el estado «Sin datos nuevos»). Con `--interval=3` se agota en 75 minutos, con 10 s en unas 4 horas y con 30 s en unas 12. Conviene dejarlo corriendo solo mientras se trabaja o se graba.
 
 ## Cómo funciona la conexión
 
@@ -110,7 +110,8 @@ npm run simulate -- --host=demo4.traccar.org --interval=10
 | **Modo demostración** | Datos simulados, siempre rotulados y con un rombo en lugar de un punto, para que nunca parezcan datos reales. Se puede volver a los reales |
 | **Sin señal / sin datos nuevos** | La velocidad **no es cero**: sin conexión (o con una posición de más de 2 minutos) no se sabe, y el vehículo podría seguir moviéndose. En el arco se lee "Sin señal" (offline) o "Sin datos nuevos", con "Última: N km/h" debajo como dato histórico |
 | **Detenido** | En línea y a 0 km/h: se mantiene el 0 (es un dato real) y se añade la etiqueta "Detenido", que distingue "parado" de "sin datos". También se anuncia a lectores de pantalla ("vehículo detenido") |
-| **Sin posición / sin batería** | Mensajes explícitos ("Sin datos todavía", "No disponible") |
+| **Sin posición / sin batería** | Mensajes explícitos ("Sin datos todavía", "No disponible"). Si el vehículo elegido nunca ha reportado una posición, el mapa **no muestra ningún marcador** (ni el del vehículo anterior) |
+| **Cuenta sin vehículos** | El inicio de sesión funciona pero la cuenta no tiene dispositivos: la columna de la tarjeta explica «Todavía no hay vehículos» en vez de quedar en blanco |
 
 ## Decisiones de diseño
 
@@ -131,7 +132,7 @@ npm run simulate -- --host=demo4.traccar.org --interval=10
 Tokens en CSS _custom properties_:
 
 - [tokens.css](src/styles/tokens.css): tipografía (familias, tamaños, pesos, interlineado), escala de espaciado de 4 px, grosores de borde, radios, movimiento (duraciones y curva, incluidas las de los bucles decorativos), escala de `z-index`, el amarillo de la placa y los tamaños de objetivo táctil y de anillo de foco. Ningún componente escribe a mano un color, un tamaño de letra, un grosor de borde, un radio, un `z-index` ni una duración; solo quedan medidas de maquetación (alturas, anchos máximos) y trucos de accesibilidad como `visually-hidden`.
-- [themes.css](src/styles/themes.css): paleta de color clara y oscura (21 tokens por tema, ninguno repetido entre ellos), sombras (tarjeta, ventana, cabecera) y filtros del mapa. Cada color documenta su ratio de contraste sobre la superficie donde se usa.
+- [themes.css](src/styles/themes.css): paleta de color clara y oscura (16 tokens de color por tema; algunos valores coinciden a propósito, como el del foco y el del acento), sombras (tarjeta, ventana, cabecera) y filtros del mapa. Cada color documenta su ratio de contraste sobre la superficie donde se usa.
 - [base.css](src/styles/base.css): reset, foco global, enlace de salto y `prefers-reduced-motion`.
 - [overrides.css](src/styles/overrides.css): `forced-colors` (alto contraste de Windows) e impresión. Se importa **después** de todos los componentes, porque sus reglas tienen la misma especificidad y solo ganan por orden de carga.
 
@@ -142,12 +143,12 @@ Tokens en CSS _custom properties_:
 - **Foco:** anillo de 3 px con `:focus-visible`, de contraste 6,1:1 en claro y 10,8:1 en oscuro sobre el fondo; el contorno sigue el radio de cada control. **El contorno de foco no se elimina en ningún elemento de la aplicación:** el título del mensaje de error, que recibe el foco por programa, usa el mismo anillo global. Sobre el mapa, los botones de zoom añaden un halo del color de la superficie, para que el anillo conserve su contraste sea cual sea el color de los tiles.
 - **Lectores de pantalla:** región `aria-live` oculta que anuncia solo cambios relevantes (conexión, batería baja, saltos de velocidad de 10 km/h o más), no cada posición. El indicador de flujo es `role="status"`. El mapa es una región con nombre y el marcador una imagen con descripción (nombre, estado, velocidad y rumbo).
 - **Color y daltonismo.** Criterios de WCAG 2.1: 1.4.1 (la información no depende solo del color), 1.4.3 (contraste del texto de 4,5:1 o más) y 1.4.11 (3:1 para elementos gráficos). En la práctica: el estado va siempre en punto **y texto** (conexión, flujo, resumen de flota, batería), "En línea" además **pulsa** (una pista de movimiento) y el marcador del mapa añade la **forma** del aro al color. La placa amarilla no depende del amarillo: lleva caracteres oscuros (11,4:1) y un borde oscuro, porque el amarillo solo contrasta 1,4:1 con el fondo claro. Verificado con una simulación de protanopia, deuteranopia y tritanopia (modelo de Machado et al.): sin forma ni texto, verde, ámbar y rojo se parecen mucho con protanopia y deuteranopia (diferencia de color ΔE entre 9 y 22, donde menos de 10 se confunde), por eso ningún estado se apoya solo en el tono. Es una simulación, no una prueba con personas daltónicas; conviene revisarlo también con "Emular deficiencias de visión" de las herramientas de desarrollo de Chrome. Texto de al menos 14 px.
-- **Movimiento y centrado:** el marcador se desliza 1,8 s con _easing_ entre posiciones (`requestAnimationFrame`) y el mapa lo mantiene siempre en el centro, como pide el reto, sin botón ni modo manual. El operador puede mirar alrededor (arrastrar o usar las flechas): el mapa vuelve al vehículo con suavidad en cuanto llega la siguiente posición, nunca en mitad del arrastre. El zoom (rueda, doble clic, pellizco) se hace siempre sobre el vehículo. Si hay un silencio de más de 60 s entre dos posiciones, el marcador salta en vez de "volar".
-- **Verificado:** axe-core sin violaciones en claro y oscuro; contraste calculado de todo el texto visible (4,5:1, o 3:1 en texto grande) y de los bordes de controles (3:1). **Aún sin probar con un lector de pantalla real** (NVDA o VoiceOver).
+- **Movimiento y centrado:** el marcador se desliza y el mapa lo sigue, pero el operador puede mirar alrededor con el ratón o con las flechas (ver «Decisiones de diseño»). Todo el movimiento se desactiva con `prefers-reduced-motion`.
+- **Verificado:** axe-core (reglas WCAG 2.0, 2.1 y 2.2 A y AA, y buenas prácticas) sobre las 65 historias de Storybook en claro y oscuro, y sobre la app real en sus estados: sin violaciones. La única regla que salta, `landmark-unique`, es de una historia que dibuja cada tarjeta dos veces a propósito (claro y oscuro) y está desactivada solo allí. Contraste calculado de todo el texto visible (4,5:1, o 3:1 en texto grande) y de los bordes de controles (3:1). **Aún sin probar con un lector de pantalla real** (NVDA o VoiceOver).
 
 ## Storybook
 
-Cada componente tiene _stories_ con todos sus estados (en línea, offline, batería baja, sin posición, error, cargando, etc.) y alternancia de tema.
+Cada componente tiene _stories_ con todos sus estados (en línea, offline, batería baja, sin posición, sin vehículos, error, cargando, etc.): más de 60, con alternancia de tema y, en las de color con significado, claro y oscuro lado a lado. Incluye historias de regresión, como el cambio a un vehículo sin posición.
 
 ```bash
 npm run storybook          # http://localhost:6006
@@ -164,23 +165,32 @@ npm run build-storybook
 | `npm run lint` | Oxlint |
 | `npm run simulate` | Envía posiciones simuladas a Traccar |
 | `npm run storybook` | Storybook en desarrollo |
+| `npm run build-storybook` | Genera Storybook estático en `storybook-static/` |
 
 ## Estructura
 
 ```
 src/
-├── api/            Cliente de Traccar, simulador local, tipos y rutas de demostración
-├── components/     AppShell, StatusCard, Map, FeedStatus, ErrorState, Skeleton,
-│                   DeviceSelector, ThemeToggle, ConnectionIndicator (cada uno con su CSS y stories)
+├── api/            Cliente de Traccar, simulador local, tipos, rutas de demostración y el «caminante» de rutas
+├── components/     AppShell, StatusCard (medidor, batería, lectura de velocidad), Map (marcador, rastro),
+│                   FeedStatus, FleetSummary, ErrorState, NoVehicles, Skeleton, DeviceSelector,
+│                   ThemeToggle, ConnectionIndicator, LicensePlate, BrandMark (cada uno con su CSS y stories)
 ├── hooks/          useMonitor (ciclo de datos), useTheme, useNow, useTweenedNumber
-├── styles/         tokens, temas y base
-└── utils/          conversión de unidades, tiempo relativo, etiquetas de estado
+├── styles/         tokens, temas, base y overrides (alto contraste e impresión)
+└── utils/          unidades, tiempo relativo, estado y antigüedad de los datos, nombre del vehículo, movimiento
 scripts/            Simulador de posiciones para Traccar
+.storybook/         Configuración de Storybook (alternancia de tema)
 ```
 
 ## Despliegue
 
-_Pendiente._ La app necesita que `/api` (REST y WebSocket) llegue a Traccar desde el mismo origen o desde un origen que añada CORS, porque los servidores de demostración no lo envían. Opciones previstas: _rewrite_ de la plataforma (Vercel o Netlify) o un Worker de Cloudflare como proxy, apuntando `VITE_TRACCAR_BASE` a él. Para el despliegue público hay que poner `VITE_USE_MOCK=false` si se quieren datos reales.
+_Pendiente._ En producción la app necesita que `/api` (REST **y** WebSocket) llegue a Traccar desde su mismo origen o desde uno que añada CORS, porque los servidores de demostración no envían `Access-Control-Allow-Origin`. Un _rewrite_ de Vercel o Netlify cubre el REST, pero **no** el WebSocket; para el tiempo real hace falta un proxy que lo soporte (por ejemplo un Worker de Cloudflare), con `VITE_TRACCAR_BASE` apuntando a él. Si no hay proxy de WebSocket, la app sigue funcionando: cae a _polling_ cada 5 s.
+
+Antes de publicar:
+
+- Usa `VITE_USE_MOCK=false` si quieres datos reales; con `true` toda la app es simulada y se rotula como modo demostración.
+- Las credenciales `VITE_TRACCAR_*` quedan dentro del código público. Usa una cuenta de demostración **con una contraseña que no repitas en ningún otro sitio**, o deja que el proxy inicie la sesión en el servidor.
+- Quien abra la app sin que el simulador esté enviando verá posiciones viejas: el estado «Sin datos nuevos» y el modo demostración existen para ese caso.
 
 ## Notas y límites conocidos
 
@@ -191,4 +201,20 @@ _Pendiente._ La app necesita que `/api` (REST y WebSocket) llegue a Traccar desd
 
 ## Uso de IA
 
-_Pendiente de completar:_ cómo se usó el copiloto, qué prompts fueron clave y qué hubo que corregir porque no cumplía los estándares de UX, visuales o de accesibilidad.
+> Borrador: revisa y ajusta con tus propias palabras antes de entregar.
+
+Usé IA como copiloto en tres frentes; la dirección de arte, la verificación y las decisiones de producto las tomé yo.
+
+- **Diseño.** Generé el diseño con Google Stitch a partir de un prompt. La primera versión no sirvió: añadía datos que Traccar no entrega (combustible, odómetro, presión de neumáticos…), un fondo oscuro cansado y demasiado texto. Rehíce el prompt con una lista explícita de lo que **no** debía aparecer. Más tarde usé v0 solo para explorar una dirección visual (arco de velocidad y barra de batería segmentada) que llevé a mi propio CSS, en lugar de copiar su código.
+- **Código.** Claude Code escribió el esqueleto (cliente de Traccar, simulador, componentes, Storybook) y yo lo revisé en el navegador, en claro y oscuro y en varias resoluciones.
+- **Verificación.** Pedí auditar con axe-core, calcular contrastes y probar con teclado; no me bastó que «compilara».
+
+Lo que hubo que corregir porque no cumplía:
+
+- La IA propuso **CARTO** como mapa sobrio; al probarlo exigía clave de API y dibujaba una marca de agua, así que lo descarté y mantuve OpenStreetMap.
+- El simulador inicial movía los vehículos **en círculos matemáticos**, por encima del agua y los edificios. Lo cambié por rutas reales por calles.
+- Los números de velocidad y batería **saltaban de golpe**; ahora se animan hacia su valor y se resaltan con suavidad.
+- Una tarjeta **flotante** sobre el mapa en móvil tapaba el marcador y los controles: pasó a una disposición en flujo normal.
+- El estado decía «En vivo» con una posición de **7 horas** de antigüedad: «conectado» no es «fresco». Lo separé y añadí el aviso de datos viejos, con un modo demostración siempre rotulado.
+- Al cambiar a un vehículo sin posición, el mapa **conservaba el marcador del anterior** bajo el nombre del nuevo (lo detecté revisando el código y lo reproduje con una historia de regresión antes de arreglarlo).
+- Cuando Traccar dejó de guardar posiciones, el primer diagnóstico (un tope por cuenta) estaba **equivocado**; lo corregí cruzando los datos reales (dos bloques de exactamente 1.500 posiciones por vehículo) con lo que dicen los foros de Traccar.
