@@ -282,8 +282,6 @@ El plan gratuito de Workers admite 100.000 peticiones al día (consulta los lím
 
 ## Uso de IA
 
-> Borrador: revisa y ajusta con tus propias palabras antes de entregar.
-
 Usé IA como copiloto en tres frentes; la dirección de arte, la verificación y las decisiones de producto las tomé yo.
 
 - **Diseño.** Generé el diseño con Google Stitch a partir de un prompt. La primera versión no sirvió: añadía datos que Traccar no entrega (combustible, odómetro, presión de neumáticos…), un fondo oscuro cansado y demasiado texto. Rehíce el prompt con una lista explícita de lo que **no** debía aparecer. Más tarde usé v0 solo para explorar una dirección visual (arco de velocidad y barra de batería segmentada) que llevé a mi propio CSS, en lugar de copiar su código.
