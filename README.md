@@ -117,10 +117,11 @@ npm run simulate -- --host=demo4.traccar.org --interval=10
 - **Velocidad:** Traccar entrega nudos; se convierte a km/h con `knots × 1,852` y se redondea.
 - **"Conectado" no es "fresco":** un socket abierto puede no entregar nada nuevo, por eso la antigüedad de la última posición se evalúa aparte.
 - **Marcador SVG:** el aro y el halo llevan el estado de conexión (verde, gris o ámbar) y la flecha la dirección (`course`). La rotación toma el camino corto (350° → 10° gira 20°, no 340°).
-- **Movimiento:** el marcador se desliza 1,8 s con _easing_ entre posiciones (`requestAnimationFrame`) y el mapa lo sigue mientras no se mueva a mano. Si el operador arrastra el mapa, el seguimiento se pausa y aparece **Recentrar en el vehículo**.
+- **Movimiento:** el marcador se desliza 1,8 s con _easing_ entre posiciones (`requestAnimationFrame`) y el mapa lo sigue mientras no se mueva a mano. Si el operador arrastra el mapa o usa las flechas del teclado, el seguimiento se pausa **en ese instante** (no al terminar el gesto, porque mientras el vehículo se desliza el mapa se recentra en cada frame y cancelaría el movimiento) y aparece **Recentrar en el vehículo**. En móvil ese botón es solo un icono de 36 px, con el nombre disponible para lectores de pantalla.
 - **Micro-interacciones:** los números se animan hacia su nuevo valor y se resaltan con un realce suave que se desvanece; el texto relativo ("Hace 15 segundos") cambia con un fundido. Se actualizan en pasos de 5 s para que no cambie cada segundo.
 - **Tema claro/oscuro:** se guarda la preferencia (o se toma la del sistema) y se aplica antes del primer pintado, sin destello. El mapa oscuro recolorea solo los _tiles_, no los marcadores ni los controles.
 - **Responsive:** móvil con mapa arriba y tarjeta debajo (la página hace scroll); tablet y escritorio en dos columnas con mapa y tarjeta siempre de la misma altura.
+- **El mapa móvil no se tapa:** en tablet y escritorio el estado del flujo flota sobre el mapa, arriba a la izquierda. En móvil el mapa es pequeño, así que ese estado y su botón ("Ver modo demostración" o "Volver a datos reales") pasan a una franja **encima** del mapa, en el flujo normal de la página. Durante la carga se reserva el hueco de esa franja para que no haya saltos de layout. En el mapa solo quedan el zoom y, si hace falta, el icono de recentrar.
 
 ## Sistema de diseño
 
@@ -133,7 +134,7 @@ Tokens en CSS _custom properties_:
 ## Accesibilidad (WCAG 2.1 AA)
 
 - **Semántica:** la tarjeta usa `<section>` etiquetada y lista de descripción (`<dl>`, `<dt>`, `<dd>`); la fecha va en `<time dateTime>`; `lang="es"`; enlace "Saltar al contenido".
-- **Teclado:** todo es operable con Tab, Espacio y Enter: selector de vehículo (`<select>` nativo), interruptor de tema (`role="switch"`), zoom, recentrar, reintentar. El mapa se puede mover con las flechas.
+- **Teclado:** todo es operable con Tab, Espacio y Enter: selector de vehículo (`<select>` nativo), interruptor de tema (`role="switch"`), zoom, recentrar, reintentar. El mapa se puede mover con las flechas. Los objetivos táctiles miden 44 px, o 32–36 px en móvil (por encima del mínimo de 24 px de WCAG 2.2).
 - **Foco:** anillo de 3 px de alto contraste con `:focus-visible`; el contorno sigue el radio de cada control. El único `outline: none` (el título del error, que solo recibe foco por programa) tiene el botón de reintento como reemplazo visible.
 - **Lectores de pantalla:** región `aria-live` oculta que anuncia solo cambios relevantes (conexión, batería baja, saltos de velocidad de 10 km/h o más), no cada posición. El indicador de flujo es `role="status"`. El mapa es una región con nombre y el marcador una imagen con descripción (nombre, estado, velocidad y rumbo).
 - **Color:** el estado nunca depende solo del color (punto más texto). Texto de al menos 14 px.
