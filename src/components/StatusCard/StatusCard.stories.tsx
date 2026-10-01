@@ -43,7 +43,7 @@ export const VelocidadAlta: Story = {
 
 export const SinConexion: Story = {
   name: 'Sin conexión',
-  args: { device: makeDevice({ status: 'offline' }), position: makePosition({ speedKmh: 0, ageSeconds: 5 * 60 }) },
+  args: { device: makeDevice({ status: 'offline' }), position: makePosition({ speedKmh: 34, ageSeconds: 5 * 60 }) },
 }
 
 export const Desconocido: Story = {

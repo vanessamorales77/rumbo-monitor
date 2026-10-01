@@ -1,12 +1,3 @@
-const clock = new Intl.DateTimeFormat('es', {
-  hour: '2-digit',
-  minute: '2-digit',
-  second: '2-digit',
-  hour12: false,
-})
-
-export const formatClock = (iso: string): string => clock.format(new Date(iso))
-
 const plural = (n: number, unit: string) => `${n} ${unit}${n === 1 ? '' : 's'}`
 
 export function formatRelative(iso: string, now: number): string {

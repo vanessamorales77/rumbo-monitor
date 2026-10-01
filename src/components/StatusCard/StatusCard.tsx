@@ -3,7 +3,7 @@ import type { Device, Position } from '../../api'
 import { useNow } from '../../hooks/useNow'
 import { useTweenedNumber } from '../../hooks/useTweenedNumber'
 import { connectionLabel } from '../../utils/status'
-import { formatClock, formatRelative } from '../../utils/time'
+import { formatRelative } from '../../utils/time'
 import { knotsToKmh } from '../../utils/units'
 import { ConnectionIndicator } from '../ConnectionIndicator/ConnectionIndicator'
 import { AnimatedValue } from './AnimatedValue'
@@ -21,7 +21,10 @@ interface Props {
 
 export function StatusCard({ device, position }: Props) {
   const now = useNow()
-  const speed = position ? knotsToKmh(position.speed) : null
+  const lastSpeed = position ? knotsToKmh(position.speed) : null
+  // An offline vehicle's last speed is history: show it as such, never as a current reading.
+  const offline = device.status === 'offline'
+  const speed = offline ? null : lastSpeed
   const battery = position?.attributes.batteryLevel ?? null
   const batteryLow = battery !== null && battery <= LOW_BATTERY
   const shownSpeed = useTweenedNumber(speed)
@@ -40,11 +43,19 @@ export function StatusCard({ device, position }: Props) {
 
       <dl className="status-card__data">
         <div className="status-card__row">
-          <dt>Velocidad</dt>
+          <dt>
+            Velocidad
+            {offline && lastSpeed !== null && <span className="status-card__note">· última: {lastSpeed} km/h</span>}
+          </dt>
           <dd className="status-card__value status-card__value--gauge">
             <SpeedGauge value={shownSpeed ?? 0}>
               {speed === null ? (
-                <span className="status-card__number">—</span>
+                <>
+                  <span className="status-card__number" aria-hidden="true">
+                    —
+                  </span>
+                  <span className="visually-hidden">{offline ? 'Sin conexión, sin velocidad actual' : 'Sin dato'}</span>
+                </>
               ) : (
                 <AnimatedValue value={speed}>
                   <span className="status-card__number">{Math.round(shownSpeed ?? speed)}</span>
@@ -77,7 +88,7 @@ export function StatusCard({ device, position }: Props) {
           </dt>
           <dd className="status-card__value">
             {position ? (
-              <time dateTime={position.fixTime} title={formatClock(position.fixTime)}>
+              <time dateTime={position.fixTime}>
                 <AnimatedValue value={position.fixTime}>
                   <FadeText text={formatRelative(position.fixTime, now)} />
                 </AnimatedValue>

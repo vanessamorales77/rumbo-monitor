@@ -32,11 +32,12 @@ export function ErrorState({ kind, onRetry, onDemo }: Props) {
   const { title, body } = COPY[kind]
   const headingRef = useRef<HTMLHeadingElement>(null)
 
-  // Move focus to the message so keyboard and screen-reader users land on it.
+  // Move focus to the message so keyboard and screen-reader users land on it. No role="alert":
+  // that would announce the same text a second time. The heading is described by the body.
   useEffect(() => headingRef.current?.focus(), [])
 
   return (
-    <section className="error-state" role="alert" aria-labelledby="error-title">
+    <section className="error-state" aria-labelledby="error-title">
       <span className="error-state__icon" aria-hidden="true">
         <svg viewBox="0 0 24 24" width="28" height="28" focusable="false">
           <g fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -45,10 +46,12 @@ export function ErrorState({ kind, onRetry, onDemo }: Props) {
           </g>
         </svg>
       </span>
-      <h2 id="error-title" ref={headingRef} tabIndex={-1} className="error-state__title">
+      <h2 id="error-title" ref={headingRef} tabIndex={-1} aria-describedby="error-body" className="error-state__title">
         {title}
       </h2>
-      <p className="error-state__body">{body}</p>
+      <p id="error-body" className="error-state__body">
+        {body}
+      </p>
       <button type="button" className="error-state__retry" onClick={onRetry}>
         Reintentar
       </button>

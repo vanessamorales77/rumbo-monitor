@@ -53,6 +53,7 @@
 
 .status-card__row dt {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: var(--space-2);
   font-size: var(--font-size-sm);
@@ -80,6 +81,11 @@
   flex-wrap: wrap;
 }
 
+.status-card__value {
+  flex-wrap: wrap;
+  row-gap: 0;
+}
+
 .status-card__value--alert {
   color: var(--color-danger);
 }
@@ -97,6 +103,12 @@
 
 .status-card__unit {
   margin-left: var(--space-1);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-regular);
+  color: var(--color-text-muted);
+}
+
+.status-card__note {
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-regular);
   color: var(--color-text-muted);
