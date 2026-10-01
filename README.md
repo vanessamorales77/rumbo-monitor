@@ -5,7 +5,7 @@ Single Page Application para una sala de control de flota: se conecta a la API p
 Hecha para la prueba técnica de **Design Engineer (UX/UI)**. El foco está en los estados de la interfaz (carga, error, datos viejos, sin conexión), la suavidad del movimiento, el sistema de diseño y la accesibilidad.
 
 > **Estado del proyecto**
-> - Despliegue público: _pendiente_ (ver [Despliegue](#despliegue)).
+> - Aplicación desplegada: <https://rumbo-monitor.vercel.app> (Vercel), que habla con Traccar a través de un Worker de Cloudflare (ver [Despliegue](#despliegue)).
 > - Video de presentación: _pendiente_.
 
 Repositorio: <https://github.com/vanessamorales77/rumbo-monitor>
