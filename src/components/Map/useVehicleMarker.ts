@@ -158,7 +158,13 @@ export function useVehicleMarker({ containerRef, latitude, longitude, course, st
       doubleClickZoom: 'center',
       touchZoom: 'center',
     }).setView([4.711, -74.0721], 3)
-    L.control.zoom({ position: 'bottomright', zoomInTitle: 'Acercar', zoomOutTitle: 'Alejar' }).addTo(map)
+    const zoom = L.control.zoom({ position: 'bottomright', zoomInTitle: 'Acercar', zoomOutTitle: 'Alejar' }).addTo(map)
+    // Leaflet draws the zoom buttons as <a role="button">, which only react to Enter. A button must also answer to Space.
+    zoom.getContainer()?.addEventListener('keydown', (event) => {
+      if (event.key !== ' ') return
+      event.preventDefault() // otherwise the page scrolls
+      if (!event.repeat) (event.target as HTMLElement).click()
+    })
     L.control.attribution({ position: 'bottomleft', prefix: false }).addTo(map)
     tileLayerRef.current = L.tileLayer(TILE_URL, { maxZoom: 19, attribution: TILE_ATTRIBUTION }).addTo(map)
     // The operator's intent is detected when it STARTS: while the vehicle glides we centre every frame,

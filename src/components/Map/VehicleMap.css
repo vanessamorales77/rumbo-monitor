@@ -41,8 +41,16 @@
   color: var(--color-accent);
 }
 
+/* The ring sits on top of map tiles of any colour: a halo in the surface colour gives it a known neighbour. */
 .vehicle-map .leaflet-bar a:focus-visible {
-  outline-offset: 0;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 2px var(--color-surface);
+}
+
+/* Leaflet gives the first/last button 2px corners with a more specific selector; keep the same radius on both. */
+.vehicle-map.leaflet-touch .leaflet-bar a:first-child,
+.vehicle-map.leaflet-touch .leaflet-bar a:last-child {
+  border-radius: var(--radius-md);
 }
 
 .vehicle-map .leaflet-right .leaflet-control {
@@ -120,7 +128,9 @@
     gap: var(--space-1);
   }
 
-  .vehicle-map .leaflet-bar a {
+  .vehicle-map .leaflet-bar a,
+  .vehicle-map.leaflet-touch .leaflet-bar a:first-child,
+  .vehicle-map.leaflet-touch .leaflet-bar a:last-child {
     width: 36px;
     height: 36px;
     font-size: 18px;

@@ -9,7 +9,7 @@ const meta = {
     docs: {
       description: {
         component:
-          'La placa del vehículo con el aspecto de una placa real (fondo amarillo, caracteres oscuros). Es igual en claro y oscuro porque imita un objeto físico. Los lectores de pantalla leen "Placa ABC-123".',
+          'La placa del vehículo con el aspecto de una placa real (fondo amarillo, caracteres oscuros). Es igual en claro y oscuro porque imita un objeto físico. El nombre del dato ("Placa") lo pone la tarjeta, que la coloca en un `<dl>` con una etiqueta oculta; sola, la placa es solo el texto.',
       },
     },
   },

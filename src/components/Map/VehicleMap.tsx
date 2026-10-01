@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import 'leaflet/dist/leaflet.css'
 import type { Device, Position } from '../../api'
 import { useNow } from '../../hooks/useNow'
@@ -18,6 +18,7 @@ interface Props {
 
 export function VehicleMap({ device, position }: Props) {
   const containerRef = useRef<HTMLDivElement>(null)
+  const hintId = useId()
 
   const now = useNow(10_000)
   // Same rule as the status card: a missing or old speed is history, not a reading, so leave it out of the name.
@@ -50,7 +51,17 @@ export function VehicleMap({ device, position }: Props) {
 
   return (
     <>
-      <div ref={containerRef} className="vehicle-map" role="region" aria-label="Mapa de ubicación del vehículo" />
+      <div
+        ref={containerRef}
+        className="vehicle-map"
+        role="region"
+        aria-label="Mapa de ubicación del vehículo"
+        aria-describedby={hintId}
+      />
+      <p id={hintId} className="visually-hidden">
+        El mapa se mantiene centrado en el vehículo. Con el mapa enfocado, las flechas mueven la vista y vuelve al vehículo con
+        la siguiente posición. Los botones Acercar y Alejar funcionan con Enter y Espacio.
+      </p>
       {covered && <MapSkeleton leaving={mapReady} />}
     </>
   )

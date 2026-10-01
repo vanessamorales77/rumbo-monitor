@@ -43,10 +43,23 @@ export function StatusCard({ device, position }: Props) {
         <h2 id="status-card-title" className="status-card__title">
           {model}
         </h2>
-        <div className="status-card__badges">
-          {plate && <LicensePlate value={plate} />}
-          <ConnectionIndicator status={device.status} />
-        </div>
+        {/* Label/value pairs, like the rest of the card: the labels are read by screen readers but not drawn. */}
+        <dl className="status-card__badges">
+          {plate && (
+            <div>
+              <dt className="visually-hidden">Placa</dt>
+              <dd>
+                <LicensePlate value={plate} />
+              </dd>
+            </div>
+          )}
+          <div>
+            <dt className="visually-hidden">Estado de conexión</dt>
+            <dd>
+              <ConnectionIndicator status={device.status} />
+            </dd>
+          </div>
+        </dl>
       </header>
 
       <dl className="status-card__data">
