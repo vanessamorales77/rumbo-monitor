@@ -10,6 +10,26 @@ Hecha para la prueba técnica de **Design Engineer (UX/UI)**. El foco está en l
 
 Repositorio: <https://github.com/vanessamorales77/rumbo-monitor>
 
+## Qué pide la prueba y dónde está
+
+| Requisito del enunciado | Cómo se cumple |
+| --- | --- |
+| Autenticarse (`POST /api/session`) | [traccarClient.ts](src/api/traccarClient.ts). La app lo llama al arrancar; en producción el Worker inicia la sesión de verdad con una cuenta que nunca llega al navegador |
+| Lista de dispositivos y elegir uno (`GET /api/devices`) | Selector de vehículo nativo en la cabecera (`<select>`) |
+| Posición periódica: _polling_ o WebSocket (`GET /api/positions`) | **Las dos**: WebSocket y, si cae, _polling_ cada 5 s ([Cómo funciona la conexión](#cómo-funciona-la-conexión)) |
+| Estado de carga sin saltos de diseño (CLS) | Esqueletos con las mismas clases y alturas que el contenido real |
+| Estado de error con micro-copy claro y botón de reintento | Pantalla de error con mensaje por causa, **Reintentar** y reintento automático |
+| Suavidad del movimiento | El marcador se desliza 1,8 s entre posiciones y deja un rastro que se desvanece |
+| Sistema de diseño y tokens | CSS _custom properties_ ([Sistema de diseño](#sistema-de-diseño)) |
+| Modo claro/oscuro | Interruptor accesible; sigue al sistema hasta que el usuario elige |
+| Micro-interacciones en velocidad, batería y conexión | Los valores se animan hacia el nuevo número y se resaltan; la conexión cambia con un fundido |
+| Tarjeta de estado: nombre, conexión con pulso, velocidad en km/h, última actualización | [StatusCard](src/components/StatusCard/StatusCard.tsx) (con batería y placa además) |
+| Mapa interactivo, centrado, marcador SVG que rota con `course` o cambia de color | Leaflet; el marcador gira con el rumbo y su aro lleva el estado de conexión |
+| Accesibilidad WCAG 2.1 AA (`<dl>`, teclado, foco, `aria-label`, `aria-live`) | Ver [Accesibilidad](#accesibilidad-wcag-21-aa) |
+| Repositorio con README (cómo ejecutar, variables y _endpoints_) | Este documento |
+| Aplicación desplegada | <https://rumbo-monitor.vercel.app> |
+| Video de presentación | _Pendiente_ |
+
 ## Stack
 
 | Área | Elección |
@@ -51,15 +71,15 @@ VITE_TRACCAR_EMAIL=tu-correo@ejemplo.com
 VITE_TRACCAR_PASSWORD=tu-contraseña
 ```
 
-Las credenciales viven en variables `VITE_*`, que Vite incluye en el _bundle_ del navegador. Es aceptable para una cuenta de demostración, pero **nunca uses credenciales reales de producción así**.
+**Solo en desarrollo:** las variables `VITE_*` las incluye Vite en el _bundle_ del navegador, así que sirven para una cuenta de demostración en tu equipo, pero no son un lugar seguro para una contraseña. En producción no se usan: la cuenta vive como secreto en el Worker de Cloudflare ([Despliegue](#despliegue)).
 
 ### Variables de entorno
 
 | Variable | Para qué sirve | Valor por defecto |
 | --- | --- | --- |
-| `VITE_USE_MOCK` | `true` usa el simulador local y no hace peticiones de red | `true` en `.env.example` |
-| `VITE_TRACCAR_EMAIL` / `VITE_TRACCAR_PASSWORD` | Cuenta de Traccar con la que se inicia sesión | vacío |
-| `VITE_TRACCAR_BASE` | Origen de la API. Vacío = mismo origen (proxy) | vacío |
+| `VITE_USE_MOCK` | `true` usa el simulador local y no hace peticiones de red. En producción debe ser `false` | `true` en `.env.example` |
+| `VITE_TRACCAR_EMAIL` / `VITE_TRACCAR_PASSWORD` | Cuenta de Traccar con la que se inicia sesión. **Solo desarrollo**; en producción no se definen | vacío |
+| `VITE_TRACCAR_BASE` | Origen de la API. Vacío = mismo origen (el proxy de Vite en desarrollo). En producción, la URL del Worker | vacío |
 | `VITE_TILE_URL` | Plantilla de URL de los _tiles_ del mapa | OpenStreetMap |
 | `VITE_TILE_ATTRIBUTION` | Atribución que se muestra en el mapa | OpenStreetMap |
 | `TRACCAR_TARGET` | Servidor al que el proxy de desarrollo reenvía `/api` (solo servidor, no llega al navegador) | `https://demo4.traccar.org` |
@@ -70,7 +90,7 @@ Todos relativos a `VITE_TRACCAR_BASE` (o al mismo origen):
 
 | Método y ruta | Uso |
 | --- | --- |
-| `POST /api/session` | Autenticación (`email` y `password` como formulario). La cookie de sesión se envía con `credentials: 'include'` |
+| `POST /api/session` | Autenticación (`email` y `password` como formulario). En desarrollo la hace el proxy de Vite con tu cuenta; en producción la app envía la llamada y el Worker inicia la sesión con la cuenta que guarda como secreto, así que las credenciales de la app van vacías |
 | `GET /api/devices` | Lista de dispositivos y su estado de conexión |
 | `GET /api/positions` | Última posición de cada dispositivo (carga inicial y _polling_) |
 | `WS /api/socket` | Actualizaciones en tiempo real de dispositivos y posiciones |
@@ -80,6 +100,8 @@ Todos relativos a `VITE_TRACCAR_BASE` (o al mismo origen):
 Los servidores de demostración no envían `Access-Control-Allow-Origin`, así que el navegador bloquea las llamadas directas desde otro origen. En desarrollo, Vite hace de proxy de `/api` (incluido el WebSocket) hacia `TRACCAR_TARGET` y reescribe cookies y cabecera `Origin` ([vite.config.ts](vite.config.ts)). En producción ese papel lo hace un Worker de Cloudflare ([worker/](worker/)), que además guarda la cuenta de Traccar para que no viaje en el navegador. Ver [Despliegue](#despliegue).
 
 ## Simulador de datos para Traccar
+
+**Por qué existe.** La app solo _lee_: en un sistema real, los datos los producen rastreadores GPS en los vehículos, que envían sus posiciones a Traccar. El enunciado daba por hecho que las credenciales de demostración (`admin/admin` o `demo/demo`) traían vehículos de ejemplo ya en movimiento. A finales de septiembre de 2026 se probaron en los servidores `demo`, `demo2`, `demo3` y `demo4`: **las cuatro respuestas fueron 401**. Hay que registrar una cuenta propia, y una cuenta nueva **no trae ningún dispositivo**. Sin vehículos que envíen datos no habría nada que ver, así que el simulador hace el papel de esos rastreadores. No forma parte del producto: la interfaz solo habla con Traccar y no sabe quién produce los datos, y con rastreadores reales funcionaría igual.
 
 [scripts/simulate.ts](scripts/simulate.ts) envía posiciones simuladas a tu servidor de Traccar por el endpoint OsmAnd (puerto 5055), para ver la app con datos reales y en movimiento sin rastreadores físicos. Los vehículos siguen rutas por calles reales ([demoRoutes.json](src/api/demoRoutes.json)): tres circuitos de Bogotá calculados una sola vez con [OSRM](https://project-osrm.org/) sobre datos de [OpenStreetMap](https://www.openstreetmap.org/copyright) (© colaboradores de OpenStreetMap) y guardados como datos fijos, así que el simulador no depende de ningún servicio para funcionar.
 
@@ -95,7 +117,7 @@ npm run simulate -- --host=demo4.traccar.org --interval=10
 [traccarClient.ts](src/api/traccarClient.ts) implementa una interfaz común (`TelemetrySource`) que también cumple el simulador, así que la UI no sabe de dónde vienen los datos.
 
 - **Tiempo real:** WebSocket primero. Si se cae, pasa a _polling_ cada 5 s y reintenta el socket cada 15 s en segundo plano. El _polling_ pide dispositivos y posiciones, para que el estado de conexión tampoco quede obsoleto.
-- **Sesión expirada:** ante un 401 vuelve a iniciar sesión una sola vez y reintenta. Las llamadas simultáneas comparten un único inicio de sesión.
+- **Sesión expirada:** contra Traccar directo (desarrollo), ante un 401 vuelve a iniciar sesión una sola vez y reintenta; las llamadas simultáneas comparten un único inicio de sesión. En producción lo resuelve el Worker, que autentica cada llamada ([Despliegue](#despliegue)).
 - **Resiliencia:** _timeout_ de 10 s con `AbortController`, errores tipados (`auth`, `network`, `server`, `timeout`) y tramas WebSocket corruptas ignoradas sin tumbar el flujo.
 - **Salud del flujo:** si el _polling_ falla dos veces seguidas (~10 s), el estado pasa a `lost`.
 
@@ -106,7 +128,7 @@ npm run simulate -- --host=demo4.traccar.org --interval=10
 | **Cargando** | Esqueletos de mapa y tarjeta con las mismas clases y alturas que el contenido real, para evitar saltos de layout (CLS); el selector de la cabecera conserva su ancho ("Cargando vehículos…"). La carga cubre también los _tiles_: el esqueleto del mapa sigue hasta que cargan las teselas alrededor del vehículo y se desvanece, así el mapa no aparece a medio pintar. La tarjeta entra con un fundido corto. Si pasan más de 5 s, el texto admite la demora ("Está tardando más de lo normal…") en vez de callar. El `<main>` marca `aria-busy` |
 | **Error** | Pantalla con mensaje distinto según la causa (red, tiempo agotado, credenciales, servidor), foco en el título y botón **Reintentar** de 44 px. Ofrece además ver el modo demostración. **Se reintenta sola** a los 15 s (30 y 60 s si sigue fallando) con una cuenta atrás visible y un botón "Detener" (WCAG 2.2.1: un límite de tiempo que el usuario puede desactivar). Con credenciales rechazadas no hay reintento automático: no se arreglan solas. Los reintentos automáticos no roban el foco; el primer error sí |
 | **Datos en vivo / Polling** | Indicador sobre el mapa: "Datos en vivo" (WebSocket) o "Actualizando cada 5 s". Habla de los datos, no del vehículo: "En línea" es el estado de un vehículo, y los dos nunca se confunden |
-| **Sin datos nuevos / Ningún vehículo en línea** | El aviso es sobre **la flota**, no sobre el vehículo seleccionado: aparece si ningún vehículo figura en línea ("Ningún vehículo en línea") si los que lo están no han enviado ninguna posición, o si el más reciente lleva más de 2 minutos sin reportar. Un solo vehículo quieto o sin conexión no lo activa (su antigüedad ya está en la tarjeta). En ambos casos se ofrece el modo demostración |
+| **Sin datos nuevos / Ningún vehículo en línea** | El aviso es sobre **la flota**, no sobre el vehículo seleccionado: aparece si ningún vehículo figura en línea («Ningún vehículo en línea»), si los que lo están no han enviado ninguna posición, o si el más reciente lleva más de 2 minutos sin reportar. Un solo vehículo quieto o sin conexión no lo activa (su antigüedad ya está en la tarjeta). En ambos casos se ofrece el modo demostración |
 | **Sin conexión** | El _polling_ falla: "Sin conexión" con "datos desactualizados" en un texto secundario más tenue |
 | **Modo demostración** | Datos simulados, siempre rotulados y con un rombo en lugar de un punto, para que nunca parezcan datos reales. Se puede volver a los reales |
 | **Sin señal / sin datos nuevos** | La velocidad **no es cero**: sin conexión (o con una posición de más de 2 minutos) no se sabe, y el vehículo podría seguir moviéndose. En el arco se lee "Sin señal" (offline) o "Sin datos nuevos", con "Última: N km/h" debajo como dato histórico |
@@ -122,7 +144,7 @@ npm run simulate -- --host=demo4.traccar.org --interval=10
 - **"Conectado" no es "fresco":** un socket abierto puede no entregar nada nuevo, por eso la antigüedad de la última posición se evalúa aparte.
 - **Rastro del vehículo:** detrás del marcador queda una estela que se desvanece con sus últimas ~40 posiciones, para ver de dónde viene y hacia dónde va sin tener que recordarlo. Un vehículo parado no deja rastro y se reinicia al cambiar de vehículo. Si hay un silencio de más de 60 s entre dos posiciones, el marcador salta y el rastro empieza de nuevo, en lugar de dibujar una línea recta (un "vuelo") sobre un trayecto que no se conoce; lo mismo con la pestaña oculta o con el movimiento reducido: sin animar, pero sin perder puntos. El rastro une posiciones GPS con líneas rectas, así que con posiciones muy espaciadas corta las esquinas en los giros (no se ajusta a las calles). Se acumula durante la sesión (no se pide el historial a Traccar).
 - **Marcador SVG:** el aro y el halo llevan el estado de conexión: color (verde, gris o ámbar) **y forma** (aro continuo en línea, discontinuo sin conexión, punteado desconocido), de modo que no haga falta distinguir colores y la flecha la dirección (`course`). La rotación toma el camino corto (350° → 10° gira 20°, no 340°).
-- **Movimiento y centrado:** el marcador se desliza 1,8 s con _easing_ entre posiciones (`requestAnimationFrame`) y el mapa lo mantiene siempre en el centro, como pide el reto, sin botón ni modo manual. El operador puede mirar alrededor (arrastrar o usar las flechas): el mapa vuelve al vehículo con suavidad en cuanto llega la siguiente posición, nunca en mitad del arrastre. El zoom (rueda, doble clic, pellizco) se hace siempre sobre el vehículo. Si hay un silencio de más de 60 s entre dos posiciones, el marcador salta en vez de "volar".
+- **Movimiento y centrado:** el marcador se desliza 1,8 s con _easing_ entre posiciones (`requestAnimationFrame`) y el mapa lo mantiene en el centro, como pide el reto, sin botón de recentrar. El operador puede mirar alrededor (arrastrar o usar las flechas): el mapa vuelve al vehículo con suavidad en cuanto llega la siguiente posición, nunca en mitad del arrastre. El zoom (rueda, doble clic, pellizco) se hace siempre sobre el vehículo. Tras un silencio largo entre dos posiciones, el marcador salta en vez de "volar" (ver «Rastro del vehículo»).
 - **Micro-interacciones:** la velocidad y la batería se animan hacia su nuevo valor y se resaltan con un realce suave que se desvanece; el texto relativo ("Hace 15 segundos") cambia con un fundido (en pasos de 5 s, para que no cambie cada segundo). Un cambio de **conexión** se anuncia con tres señales a la vez: el color del indicador se transiciona, su texto se funde y se resalta, y la zona de velocidad pasa con un fundido de "34 km/h" a "Sin señal · Última…" (o al revés), mientras el arco se vacía o se llena. El número nunca pasa por 0: una velocidad desconocida no es cero. "Batería baja" y "Detenido" también entran con un fundido. Todo respeta `prefers-reduced-motion`.
 - **Tema claro/oscuro:** sigue al sistema (también en vivo, si cambia mientras la app está abierta) hasta que el usuario elige con el interruptor; solo esa elección explícita se guarda, para no "congelar" el tema del sistema como si fuera una decisión. Se aplica antes del primer pintado, sin destello, y el color de la barra del navegador (`theme-color`) se sincroniza con el de la cabecera. El mapa oscuro recolorea solo los _tiles_, no los marcadores ni los controles. El cambio se hace con un fundido de 250 ms de toda la pantalla (API de transiciones de vista; sin ella, o con movimiento reducido, es inmediato). El estado de React se cambia dentro de la transición y lee siempre el último valor pedido, de modo que dos clics seguidos nunca dejan la pantalla desincronizada.
 - **Responsive:** dos maquetas. En **horizontal** (escritorio, portátil, tablet apaisada) hay dos columnas, con mapa y tarjeta siempre de la misma altura. En **vertical** (teléfonos y tablet en vertical) la tarjeta pasa a ser una **barra de estado compacta encima del mapa**: nombre, placa y estado arriba; velocidad a la izquierda y batería y hora a la derecha. El arco decorativo desaparece (el número es la velocidad) y el mapa ocupa todo el alto que queda, de modo que lo que un operador nunca debe tener que desplazarse para ver (qué vehículo es y a qué velocidad va) queda siempre en pantalla. Medido: a 375×667, 360×640 y 320×568 la velocidad se ve sin scroll (antes, a ≤ 667 px de alto quedaba por debajo del pliegue). A menos de 360 px las tres filas se apilan. En tablet vertical el mapa deja de ser una tira estrecha de 344×912 px.
@@ -132,7 +154,7 @@ npm run simulate -- --host=demo4.traccar.org --interval=10
 
 Tokens en CSS _custom properties_:
 
-- [tokens.css](src/styles/tokens.css): tipografía (familias, tamaños, pesos, interlineado), escala de espaciado de 4 px, grosores de borde, radios, movimiento (duraciones y curva, incluidas las de los bucles decorativos), escala de `z-index`, el amarillo de la placa y los tamaños de objetivo táctil y de anillo de foco. Ningún componente escribe a mano un color, un tamaño de letra, un grosor de borde, un radio, un `z-index` ni una duración; solo quedan medidas de maquetación (alturas, anchos máximos) y trucos de accesibilidad como `visually-hidden`.
+- [tokens.css](src/styles/tokens.css): tipografía (familias, tamaños, pesos, interlineado), escala de espaciado de 4 px, grosores de borde, radios, movimiento (duraciones y curva, incluidas las de los bucles decorativos), escala de `z-index`, el amarillo de la placa y los tamaños de objetivo táctil y de anillo de foco. Ningún componente escribe a mano un color, un tamaño de letra, un grosor de borde, un radio, un `z-index` ni una duración; solo quedan medidas de maquetación (alturas, anchos máximos) y trucos de accesibilidad como `visually-hidden` y los `0,01 ms` con los que `prefers-reduced-motion` anula el movimiento.
 - [themes.css](src/styles/themes.css): paleta de color clara y oscura (16 tokens de color por tema; algunos valores coinciden a propósito, como el del foco y el del acento), sombras (tarjeta, ventana, cabecera) y filtros del mapa. Cada color documenta su ratio de contraste sobre la superficie donde se usa.
 - [base.css](src/styles/base.css): reset, foco global, enlace de salto y `prefers-reduced-motion`.
 - [overrides.css](src/styles/overrides.css): `forced-colors` (alto contraste de Windows) e impresión. Se importa **después** de todos los componentes, porque sus reglas tienen la misma especificidad y solo ganan por orden de carga.
@@ -253,6 +275,8 @@ El plan gratuito de Workers admite 100.000 peticiones al día (consulta los lím
 
 - Los _tiles_ de OpenStreetMap sirven para una demostración, pero su [política de uso](https://operations.osmfoundation.org/policies/tiles/) no cubre tráfico real; para eso, configura `VITE_TILE_URL` con un proveedor con clave.
 - Los servidores públicos de Traccar son compartidos: pueden caerse un momento o limitar el almacenamiento (ver el presupuesto del simulador).
+- **Los datos «en vivo» dependen de que algo envíe posiciones a Traccar** (ver [por qué existe el simulador](#simulador-de-datos-para-traccar)). Si nadie lo hace, la app lo dice con honestidad («Sin datos nuevos») y ofrece el modo demostración.
+- El WebSocket depende de que el servidor admita _tokens_ de acceso o sesiones (se verificó contra `demo4`). Si no pudiera abrirse, la app sigue funcionando con _polling_.
 - La antigüedad de una posición ("sin datos nuevos") se calcula con el reloj del navegador. Si el equipo del operador va desfasado más de 2 minutos respecto al servidor, los datos pueden verse como viejos aunque lleguen en vivo, o al revés.
 - Hay pruebas automáticas del Worker (`npm test`), pero no de la interfaz: esa se verifica con Storybook, axe-core y revisión manual.
 
@@ -274,4 +298,5 @@ Lo que hubo que corregir porque no cumplía:
 - Una tarjeta **flotante** sobre el mapa en móvil tapaba el marcador y los controles: pasó a una disposición en flujo normal.
 - El estado decía «En vivo» con una posición de **7 horas** de antigüedad: «conectado» no es «fresco». Lo separé y añadí el aviso de datos viejos, con un modo demostración siempre rotulado.
 - Al cambiar a un vehículo sin posición, el mapa **conservaba el marcador del anterior** bajo el nombre del nuevo (lo detecté revisando el código y lo reproduje con una historia de regresión antes de arreglarlo).
+- El primer Worker autenticaba con una cookie de sesión y funcionaba en local, pero **fallaba en producción**: Cloudflare envía cada petición desde una IP distinta y el servidor de demostración no reconocía la sesión de una a otra. Lo detectó una comprobación automática que hice desde fuera (`npm run check:proxy`), no la revisión del código; lo cambié a credenciales _Basic_ por llamada y, para el WebSocket, a un _token_ de acceso.
 - Cuando Traccar dejó de guardar posiciones, el primer diagnóstico (un tope por cuenta) estaba **equivocado**; lo corregí cruzando los datos reales (dos bloques de exactamente 1.500 posiciones por vehículo) con lo que dicen los foros de Traccar.
