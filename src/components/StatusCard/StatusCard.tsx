@@ -2,7 +2,7 @@ import { useState } from 'react'
 import type { Device, Position } from '../../api'
 import { useNow } from '../../hooks/useNow'
 import { useTweenedNumber } from '../../hooks/useTweenedNumber'
-import { connectionLabel } from '../../utils/status'
+import { connectionLabel, isStale } from '../../utils/status'
 import { formatRelative } from '../../utils/time'
 import { knotsToKmh } from '../../utils/units'
 import { ConnectionIndicator } from '../ConnectionIndicator/ConnectionIndicator'
@@ -22,9 +22,13 @@ interface Props {
 export function StatusCard({ device, position }: Props) {
   const now = useNow()
   const lastSpeed = position ? knotsToKmh(position.speed) : null
-  // An offline vehicle's last speed is history: show it as such, never as a current reading.
+  // Without a connection (or with an old fix) we do not know the speed: it is NOT zero, the vehicle may still
+  // be moving. Show the last known value as history and never as a current reading.
   const offline = device.status === 'offline'
-  const speed = offline ? null : lastSpeed
+  const stale = position !== null && isStale(position.fixTime, now)
+  const noData = offline || stale
+  const speed = noData ? null : lastSpeed
+  const noDataLabel = offline ? 'Sin señal' : stale ? 'Sin datos nuevos' : 'Sin datos'
   const battery = position?.attributes.batteryLevel ?? null
   const batteryLow = battery !== null && battery <= LOW_BATTERY
   const shownSpeed = useTweenedNumber(speed)
@@ -43,25 +47,25 @@ export function StatusCard({ device, position }: Props) {
 
       <dl className="status-card__data">
         <div className="status-card__row">
-          <dt>
-            Velocidad
-            {offline && lastSpeed !== null && <span className="status-card__note">· última: {lastSpeed} km/h</span>}
-          </dt>
+          <dt>Velocidad</dt>
           <dd className="status-card__value status-card__value--gauge">
             <SpeedGauge value={shownSpeed ?? 0}>
-              {speed === null ? (
-                <>
-                  <span className="status-card__number" aria-hidden="true">
-                    —
-                  </span>
-                  <span className="visually-hidden">{offline ? 'Sin conexión, sin velocidad actual' : 'Sin dato'}</span>
-                </>
-              ) : (
-                <AnimatedValue value={speed}>
-                  <span className="status-card__number">{Math.round(shownSpeed ?? speed)}</span>
-                  <span className="status-card__unit">km/h</span>
-                </AnimatedValue>
-              )}
+              <span className="speed-gauge__readout">
+                {speed === null ? (
+                  <>
+                    <span className="speed-gauge__headline">{noDataLabel}</span>
+                    {lastSpeed !== null && <span className="speed-gauge__note">Última: {lastSpeed} km/h</span>}
+                  </>
+                ) : (
+                  <>
+                    <AnimatedValue value={speed}>
+                      <span className="status-card__number">{Math.round(shownSpeed ?? speed)}</span>
+                      <span className="status-card__unit">km/h</span>
+                    </AnimatedValue>
+                    {speed === 0 && <span className="speed-gauge__note">Detenido</span>}
+                  </>
+                )}
+              </span>
             </SpeedGauge>
           </dd>
         </div>
@@ -136,7 +140,7 @@ function useAnnouncement(device: Device, speed: number | null, batteryLow: boole
   let nextSpeed = state.speed
   if (state.status !== device.status) parts.push(`${device.name}: ${connectionLabel(device.status)}`)
   if (speed !== null && (state.speed === null || Math.abs(speed - state.speed) >= 10)) {
-    parts.push(`velocidad ${speed} kilómetros por hora`)
+    parts.push(speed === 0 ? 'vehículo detenido' : `velocidad ${speed} kilómetros por hora`)
     nextSpeed = speed
   }
   if (state.batteryLow !== batteryLow) parts.push(batteryLow ? 'batería baja' : 'batería recuperada')

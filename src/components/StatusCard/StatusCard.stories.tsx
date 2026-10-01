@@ -46,6 +46,11 @@ export const SinConexion: Story = {
   args: { device: makeDevice({ status: 'offline' }), position: makePosition({ speedKmh: 34, ageSeconds: 5 * 60 }) },
 }
 
+export const SinDatosNuevos: Story = {
+  name: 'Sin datos nuevos',
+  args: { device: makeDevice(), position: makePosition({ speedKmh: 34, ageSeconds: 10 * 60 }) },
+}
+
 export const Desconocido: Story = {
   name: 'Desconocido',
   args: { device: makeDevice({ status: 'unknown' }), position: makePosition({ speedKmh: 0, ageSeconds: 2 * 3600 }) },

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type RefObject } from 'react'
 import L from 'leaflet'
 import type { DeviceStatus } from '../../api'
+import { prefersReducedMotion } from '../../utils/motion'
 
 const GLIDE_MS = 1_800
 const DEFAULT_ZOOM = 15
@@ -17,7 +18,6 @@ const markerHtml = `
 </div>`
 
 const easeInOut = (t: number) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2)
-const prefersReducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
 interface Params {
   containerRef: RefObject<HTMLDivElement | null>
@@ -62,11 +62,11 @@ export function useVehicleMarker({ containerRef, latitude, longitude, course, st
   }, [])
 
   /** Moves the map ourselves; the pan-away detector ignores these moves. */
-  const centerOn = useCallback((point: L.LatLng) => {
+  const centerOn = useCallback((point: L.LatLng, zoom?: number) => {
     const map = mapRef.current
     if (!map) return
     programmaticRef.current = true
-    map.setView(point, map.getZoom(), { animate: false })
+    map.setView(point, zoom ?? map.getZoom(), { animate: false })
     programmaticRef.current = false
   }, [])
 
@@ -118,9 +118,7 @@ export function useVehicleMarker({ containerRef, latitude, longitude, course, st
       markerRef.current = L.marker(target, { icon, keyboard: false }).addTo(map)
       rotorRef.current = markerRef.current.getElement()?.querySelector('.vehicle-marker__rotor') ?? null
       currentRef.current = target
-      programmaticRef.current = true
-      map.setView(target, DEFAULT_ZOOM, { animate: false })
-      programmaticRef.current = false
+      centerOn(target, DEFAULT_ZOOM)
       return
     }
 

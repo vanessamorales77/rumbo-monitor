@@ -108,12 +108,6 @@
   color: var(--color-text-muted);
 }
 
-.status-card__note {
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-regular);
-  color: var(--color-text-muted);
-}
-
 .status-card__icon {
   color: var(--color-text-muted);
 }
@@ -153,6 +147,24 @@
   inset: auto 0 6px 0;
   display: flex;
   justify-content: center;
+}
+
+.speed-gauge__readout {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.speed-gauge__headline {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.3;
+}
+
+.speed-gauge__note {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
 }
 
 .speed-gauge__value .animated-value {

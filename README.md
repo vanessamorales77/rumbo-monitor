@@ -108,7 +108,8 @@ npm run simulate -- --host=demo4.traccar.org --interval=10
 | **Sin datos nuevos** | Conectado, pero la última posición tiene más de 2 minutos |
 | **Sin conexión** | El _polling_ falla: "Sin conexión · datos desactualizados" |
 | **Modo demostración** | Datos simulados, siempre rotulados y con un rombo en lugar de un punto, para que nunca parezcan datos reales. Se puede volver a los reales |
-| **Vehículo offline** | La velocidad muestra "—" y "· última: N km/h", en vez de presentar un dato histórico como actual |
+| **Sin señal / sin datos nuevos** | La velocidad **no es cero**: sin conexión (o con una posición de más de 2 minutos) no se sabe, y el vehículo podría seguir moviéndose. En el arco se lee "Sin señal" (offline) o "Sin datos nuevos", con "Última: N km/h" debajo como dato histórico |
+| **Detenido** | En línea y a 0 km/h: se mantiene el 0 (es un dato real) y se añade la etiqueta "Detenido", que distingue "parado" de "sin datos". También se anuncia a lectores de pantalla ("vehículo detenido") |
 | **Sin posición / sin batería** | Mensajes explícitos ("Sin datos todavía", "No disponible") |
 
 ## Decisiones de diseño

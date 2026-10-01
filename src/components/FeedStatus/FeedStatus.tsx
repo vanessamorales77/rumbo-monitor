@@ -1,10 +1,8 @@
 import type { FeedMode } from '../../api'
 import { useNow } from '../../hooks/useNow'
+import { isStale } from '../../utils/status'
 import { formatRelative } from '../../utils/time'
 import './FeedStatus.css'
-
-/** A position older than this, on a feed that looks connected, is reported as "no new data". */
-export const STALE_AFTER_MS = 2 * 60_000
 
 type Kind = FeedMode | 'stale' | 'demo'
 
@@ -27,7 +25,7 @@ interface Props {
  */
 export function FeedStatus({ mode, lastFix, demo, onEnterDemo, onExitDemo }: Props) {
   const now = useNow(10_000)
-  const stale = !demo && mode !== 'lost' && lastFix !== null && now - Date.parse(lastFix) > STALE_AFTER_MS
+  const stale = !demo && mode !== 'lost' && lastFix !== null && isStale(lastFix, now)
   const kind: Kind = demo ? 'demo' : stale ? 'stale' : mode
 
   const text: Record<Kind, string> = {
@@ -38,8 +36,13 @@ export function FeedStatus({ mode, lastFix, demo, onEnterDemo, onExitDemo }: Pro
     demo: 'Modo demostración · datos simulados',
   }
 
-  const offerDemo = (kind === 'stale' || kind === 'lost') && onEnterDemo
-  const offerReal = kind === 'demo' && onExitDemo
+  // At most one action: look at simulated data when the real feed is unusable, or go back to the real one.
+  const action =
+    (kind === 'stale' || kind === 'lost') && onEnterDemo
+      ? { label: 'Ver modo demostración', run: onEnterDemo }
+      : kind === 'demo' && onExitDemo
+        ? { label: 'Volver a datos reales', run: onExitDemo }
+        : null
 
   return (
     <div className="feed-overlay">
@@ -47,14 +50,9 @@ export function FeedStatus({ mode, lastFix, demo, onEnterDemo, onExitDemo }: Pro
         <span className="feed-status__dot" aria-hidden="true" />
         {text[kind]}
       </p>
-      {offerDemo && (
-        <button type="button" className="feed-overlay__action" onClick={onEnterDemo}>
-          Ver modo demostración
-        </button>
-      )}
-      {offerReal && (
-        <button type="button" className="feed-overlay__action" onClick={onExitDemo}>
-          Volver a datos reales
+      {action && (
+        <button type="button" className="feed-overlay__action" onClick={action.run}>
+          {action.label}
         </button>
       )}
     </div>
