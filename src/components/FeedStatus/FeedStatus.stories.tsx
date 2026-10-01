@@ -39,6 +39,10 @@ export const SinDatosNuevos: Story = {
   name: 'Sin datos nuevos',
   args: { mode: 'live', lastFix: ago(6 * 3600) },
 }
+export const SinPosiciones: Story = {
+  name: 'En línea, sin posiciones',
+  args: { mode: 'live', onlineCount: 3, lastFix: null },
+}
 export const NingunoEnLinea: Story = {
   name: 'Ningún vehículo en línea',
   args: { mode: 'live', onlineCount: 0, lastFix: null },
@@ -93,6 +97,7 @@ const feedStates: Array<{ label: string; args: NonNullable<Story['args']> }> = [
   { label: 'Polling', args: { mode: 'polling' } },
   { label: 'Sin datos nuevos', args: { mode: 'live', lastFix: ago(6 * 3600) } },
   { label: 'Ningún vehículo en línea', args: { mode: 'live', onlineCount: 0, lastFix: null } },
+  { label: 'En línea, sin posiciones', args: { mode: 'live', onlineCount: 3, lastFix: null } },
   { label: 'Sin conexión', args: { mode: 'lost' } },
   { label: 'Modo demostración', args: { demo: true } },
 ]

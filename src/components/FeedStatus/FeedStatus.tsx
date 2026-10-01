@@ -10,7 +10,7 @@ interface Props {
   mode: FeedMode
   /** How many vehicles of the fleet report as online. */
   onlineCount: number
-  /** ISO time of the freshest position among the online vehicles. The warning is about the whole fleet:
+  /** ISO time of the freshest position among the online vehicles (null if none has one). The warning is about the whole fleet:
    *  one idle or offline vehicle is not a feed problem, and its own age is already on the status card. */
   lastFix: string | null
   /** The data on screen is simulated. */
@@ -29,7 +29,9 @@ interface Props {
 export function FeedStatus({ mode, onlineCount, lastFix, demo, onEnterDemo, onExitDemo }: Props) {
   const now = useNow(10_000)
   const quiet = onlineCount === 0
-  const stale = !demo && mode !== 'lost' && (quiet || (lastFix !== null && isStale(lastFix, now)))
+  // Vehicles report as online but not one has ever sent a position: connected, yet nothing to show.
+  const noPositions = onlineCount > 0 && lastFix === null
+  const stale = !demo && mode !== 'lost' && (quiet || noPositions || (lastFix !== null && isStale(lastFix, now)))
   const kind: Kind = demo ? 'demo' : stale ? 'stale' : mode
 
   const text: Record<Kind, string> = {
@@ -38,7 +40,9 @@ export function FeedStatus({ mode, onlineCount, lastFix, demo, onEnterDemo, onEx
     lost: 'Sin conexión · datos desactualizados',
     stale: quiet
       ? 'Ningún vehículo en línea'
-      : `Sin datos nuevos · ${lastFix ? formatRelative(lastFix, now).toLowerCase() : ''}`,
+      : lastFix
+        ? `Sin datos nuevos · ${formatRelative(lastFix, now).toLowerCase()}`
+        : 'En línea, pero sin posiciones todavía',
     demo: 'Modo demostración · datos simulados',
   }
 
