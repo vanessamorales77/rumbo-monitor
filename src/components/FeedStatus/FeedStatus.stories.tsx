@@ -15,7 +15,7 @@ const meta = {
       parameters.fullWidth ? (
         <Story />
       ) : (
-        <div style={{ position: 'relative', width: 'min(100%, 420px)', minHeight: 130 }}>
+        <div style={{ position: 'relative', width: 420, maxWidth: '100%', minHeight: 130 }}>
           <Story />
         </div>
       ),
