@@ -19,7 +19,10 @@ interface Seen {
 }
 
 /** A stand-in for Traccar that records what the Worker sends it. */
-function fakeTraccar(options: { expireAfter?: number; rejectLogin?: boolean; down?: boolean } = {}) {
+function fakeTraccar(
+  options: { expireAfter?: number; rejectLogin?: boolean; down?: boolean; cookieName?: string; noCookie?: boolean; rejectSession?: boolean } = {},
+) {
+  const cookieName = options.cookieName ?? 'JSESSIONID'
   const seen: Seen[] = []
   let logins = 0
   let served = 0
@@ -39,13 +42,16 @@ function fakeTraccar(options: { expireAfter?: number; rejectLogin?: boolean; dow
       logins += 1
       return new Response(JSON.stringify({ id: 1, email: 'demo@example.com', administrator: true }), {
         status: 200,
-        headers: { 'Content-Type': 'application/json', 'Set-Cookie': `JSESSIONID=session-${logins}; Path=/; HttpOnly` },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(options.noCookie ? {} : { 'Set-Cookie': `${cookieName}=session-${logins}; Path=/; HttpOnly` }),
+        },
       })
     }
     // Everything else needs the latest session cookie (and can be made to expire it after N calls).
     served += 1
     const expired = options.expireAfter !== undefined && served > options.expireAfter && logins < 2
-    if (expired || request.headers.get('Cookie') !== `JSESSIONID=session-${logins}`) return new Response('no', { status: 401 })
+    if (options.rejectSession || expired || request.headers.get('Cookie') !== `${cookieName}=session-${logins}`) return new Response('no', { status: 401 })
     return new Response(JSON.stringify([{ id: 7 }]), {
       status: 200,
       headers: { 'Content-Type': 'application/json', 'Set-Cookie': 'JSESSIONID=leak; Path=/' },
@@ -149,6 +155,32 @@ describe('sign-in and session', () => {
     const after = await call('/api/devices')
     assert.equal(after.status, 200)
     assert.equal(fake.logins(), 2)
+  })
+
+  it('uses whatever name Traccar gives its session cookie, and sends every cookie back', async () => {
+    const { seen } = fakeTraccar({ cookieName: 'TRACCAR_SESSION' })
+    assert.equal((await call('/api/devices')).status, 200)
+    assert.equal(seen.find((s) => s.url.endsWith('/api/devices'))?.cookie, 'TRACCAR_SESSION=session-1')
+  })
+
+  it('does not claim success when the sign-in brought no session cookie', async () => {
+    fakeTraccar({ noCookie: true })
+    const session = await call('/api/session', { method: 'POST' })
+    assert.equal(session.status, 502)
+    assert.match(((await session.json()) as { error: string }).error, /no session cookie/)
+    const devices = await call('/api/devices')
+    assert.equal(devices.status, 401)
+    assert.match(((await devices.json()) as { error: string }).error, /could not sign in/)
+  })
+
+  it('says so when Traccar rejects the session even after a fresh sign-in, naming the cookies (never their values)', async () => {
+    fakeTraccar({ rejectSession: true })
+    const response = await call('/api/devices')
+    assert.equal(response.status, 401)
+    const body = (await response.json()) as { error: string; cookies: string[] }
+    assert.match(body.error, /rejected the Worker session/)
+    assert.deepEqual(body.cookies, ['JSESSIONID'])
+    assert.ok(!JSON.stringify(body).includes('session-'), 'no cookie value in the answer')
   })
 
   it('reports a rejected sign-in as 401 with CORS, so the app shows its credentials error', async () => {

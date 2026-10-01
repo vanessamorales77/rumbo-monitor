@@ -31,7 +31,7 @@ const ROUTES = [
   { method: 'GET', path: '/api/socket' },
 ]
 
-/** The Traccar session cookie ("JSESSIONID=…"), kept for as long as this Worker instance lives. */
+/** Traccar's session cookie(s) as a Cookie header ("JSESSIONID=…"), kept for as long as this Worker instance lives. */
 let sessionCookie: string | null = null
 let signingIn: Promise<string> | null = null
 
@@ -66,22 +66,28 @@ function corsHeaders(origin: string | null, env: Env): Record<string, string> | 
   }
 }
 
-function pickSessionCookie(headers: Headers): string | null {
-  const all = typeof headers.getSetCookie === 'function' ? headers.getSetCookie() : [headers.get('set-cookie') ?? '']
-  const found = all.find((line) => line.startsWith('JSESSIONID='))
-  return found ? found.split(';')[0] : null
+/** Every cookie Traccar set, as a Cookie header value. Not just one by name: whatever Traccar calls its session, we send back. */
+function collectCookies(headers: Headers): string | null {
+  const lines = typeof headers.getSetCookie === 'function' ? headers.getSetCookie() : [headers.get('set-cookie') ?? '']
+  const pairs = lines
+    .map((line) => line.split(';')[0].trim())
+    .filter((pair) => /^[^=\s]+=[^\s]+$/.test(pair) && !/=deleteMe$/i.test(pair))
+  return pairs.length > 0 ? pairs.join('; ') : null
 }
 
-/** Signs in to Traccar with the configured account. Returns the upstream response and remembers the cookie. */
-async function signIn(env: Env): Promise<Response> {
+/** Cookie names only (never values): safe to show when explaining what went wrong. */
+const cookieNames = (cookie: string | null) => (cookie ? cookie.split(';').map((pair) => pair.split('=')[0].trim()) : [])
+
+/** Signs in to Traccar with the configured account. Returns the upstream response and the cookie it granted, if any. */
+async function signIn(env: Env): Promise<{ response: Response; cookie: string | null }> {
   const response = await fetch(`${upstreamOf(env)}/api/session`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded', Accept: 'application/json' },
     body: new URLSearchParams({ email: env.TRACCAR_EMAIL ?? '', password: env.TRACCAR_PASSWORD ?? '' }),
   })
-  const cookie = response.ok ? pickSessionCookie(response.headers) : null
+  const cookie = response.ok ? collectCookies(response.headers) : null
   if (cookie) sessionCookie = cookie
-  return response
+  return { response, cookie }
 }
 
 /** The cookie to use, signing in first if there is none (or if the last one was rejected). Concurrent callers share one sign-in. */
@@ -89,7 +95,7 @@ async function cookieFor(env: Env, renew = false): Promise<string | null> {
   if (renew) sessionCookie = null
   if (sessionCookie) return sessionCookie
   signingIn ??= signIn(env)
-    .then(() => sessionCookie ?? '')
+    .then(({ cookie }) => cookie ?? '')
     .finally(() => {
       signingIn = null
     })
@@ -144,9 +150,10 @@ export async function handleRequest(request: Request, env: Env): Promise<Respons
     // The app asks to sign in; the Worker does it for real with its own account and ignores whatever the browser sent.
     // Traccar's answer is the user record (including the account's e-mail): the app does not need it, so it is not passed on.
     if (route.path === '/api/session') {
-      const signedIn = await signIn(env)
-      if (signedIn.ok) return json(200, { authenticated: true }, cors)
-      return json(signedIn.status === 401 || signedIn.status === 403 ? 401 : 502, { error: 'Traccar did not accept the sign-in' }, cors)
+      const { response, cookie } = await signIn(env)
+      if (response.ok && cookie) return json(200, { authenticated: true }, cors)
+      if (response.ok) return json(502, { error: 'Traccar accepted the sign-in but sent no session cookie' }, cors)
+      return json(response.status === 401 || response.status === 403 ? 401 : 502, { error: `Traccar did not accept the sign-in (HTTP ${response.status}); check TRACCAR_EMAIL and TRACCAR_PASSWORD` }, cors)
     }
 
     const isSocket = route.path === '/api/socket'
@@ -155,7 +162,7 @@ export async function handleRequest(request: Request, env: Env): Promise<Respons
     }
 
     const cannotSignIn = () =>
-      json(401, { error: 'The Worker could not sign in to Traccar (check TRACCAR_EMAIL and TRACCAR_PASSWORD)' }, cors)
+      json(401, { error: 'The Worker could not sign in to Traccar (wrong TRACCAR_EMAIL or TRACCAR_PASSWORD, or no session cookie came back)' }, cors)
 
     let cookie = await cookieFor(env)
     if (!cookie) return cannotSignIn()
@@ -166,6 +173,9 @@ export async function handleRequest(request: Request, env: Env): Promise<Respons
       cookie = await cookieFor(env, true)
       if (!cookie) return cannotSignIn()
       response = await fetch(toUpstream(request, url, env, cookie))
+      if (response.status === 401) {
+        return json(401, { error: 'Traccar rejected the Worker session even after signing in again', cookies: cookieNames(cookie) }, cors)
+      }
     }
 
     // A successful upgrade (101) carries the live socket: hand it over untouched.

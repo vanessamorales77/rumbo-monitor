@@ -26,21 +26,24 @@ const check = (ok: boolean, name: string, detail = '') => {
 const get = (path: string, origin: string | null = app, init: RequestInit = {}) =>
   fetch(`${worker}${path}`, { ...init, headers: { ...(origin ? { Origin: origin } : {}), ...init.headers } })
 
+/** The reason the Worker gives when it refuses (its answers carry a short JSON message). */
+const why = async (response: Response) => (response.ok ? '' : ` — ${(await response.clone().text()).slice(0, 200)}`)
+
 const health = await get('/health')
 check(health.status === 200, 'el Worker responde', `HTTP ${health.status}`)
 
 const session = await get('/api/session', app, { method: 'POST' })
 const sessionBody = await session.text()
-check(session.status === 200, 'inicia sesión en Traccar con la cuenta guardada en el Worker', `HTTP ${session.status} ${sessionBody.slice(0, 80)}`)
+check(session.status === 200, 'inicia sesión en Traccar con la cuenta guardada en el Worker', `HTTP ${session.status} ${sessionBody.slice(0, 200)}`)
 check(!session.headers.get('set-cookie') && !/@/.test(sessionBody), 'no devuelve cookie ni datos de la cuenta')
 check(session.headers.get('access-control-allow-origin') === app, 'CORS: acepta el origen de la app', session.headers.get('access-control-allow-origin') ?? 'sin cabecera')
 
 const devices = await get('/api/devices')
 const list = devices.ok ? ((await devices.json()) as Array<{ name: string; status: string }>) : []
-check(devices.status === 200, 'lista los dispositivos', `HTTP ${devices.status}, ${list.length} dispositivo(s)`)
+check(devices.status === 200, 'lista los dispositivos', `HTTP ${devices.status}, ${list.length} dispositivo(s)${await why(devices)}`)
 if (list.length > 0) console.log(`       ${list.map((d) => `${d.name} (${d.status})`).join(', ')}`)
 const positions = await get('/api/positions')
-check(positions.status === 200, 'lista las posiciones', `HTTP ${positions.status}`)
+check(positions.status === 200, 'lista las posiciones', `HTTP ${positions.status}${await why(positions)}`)
 
 const foreign = await get('/api/devices', EVIL)
 check(foreign.status === 403, 'rechaza un origen ajeno', `HTTP ${foreign.status}`)
