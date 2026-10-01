@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { fn } from 'storybook/test'
 import { ErrorState } from './ErrorState'
@@ -36,9 +37,16 @@ export const ErrorDelServidor: Story = {
   args: { kind: 'server' },
 }
 
+/** Reinicia el mensaje cuando la cuenta llega a 0, como hace la aplicación al volver a intentar y volver a fallar. */
+function CountdownLoop({ seconds }: { seconds: number }) {
+  const [round, setRound] = useState(0)
+  return <ErrorState key={round} kind="network" onRetry={() => setRound((n) => n + 1)} autoRetrySeconds={seconds} onAutoRetry={() => setRound((n) => n + 1)} takeFocus={false} />
+}
+
 export const CuentaAtrasCorta: Story = {
-  name: 'Reintento automático (cuenta atrás de 6 s)',
-  args: { kind: 'network', autoRetrySeconds: 6, onAutoRetry: fn() },
+  name: 'Reintento automático (cuenta atrás de 6 s, en bucle)',
+  args: { kind: 'network' },
+  render: () => <CountdownLoop seconds={6} />,
   parameters: {
     docs: {
       description: {
