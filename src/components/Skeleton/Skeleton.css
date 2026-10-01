@@ -15,6 +15,19 @@
   }
 }
 
+.skeleton--feed {
+  width: 12rem;
+  height: 30px;
+  border-radius: var(--radius-full);
+}
+
+/* On tablet and desktop the status floats over the map, so there is nothing to reserve. */
+@media (min-width: 768px) {
+  .skeleton--feed {
+    display: none;
+  }
+}
+
 .skeleton--title {
   width: 75%;
   height: 28px;

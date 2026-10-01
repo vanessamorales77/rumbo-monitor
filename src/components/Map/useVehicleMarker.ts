@@ -37,6 +37,7 @@ const TILE_ATTRIBUTION =
 
 /** How far (px) the vehicle may sit from the map centre before the operator is considered to have panned away. */
 const PAN_AWAY_PX = 8
+const ARROW_KEYS = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight']
 
 /**
  * Owns the Leaflet map + marker. The marker glides between fixes with requestAnimationFrame,
@@ -81,7 +82,13 @@ export function useVehicleMarker({ containerRef, latitude, longitude, course, st
     L.control.zoom({ position: 'bottomright', zoomInTitle: 'Acercar', zoomOutTitle: 'Alejar' }).addTo(map)
     L.control.attribution({ position: 'bottomleft', prefix: false }).addTo(map)
     L.tileLayer(TILE_URL, { maxZoom: 19, attribution: TILE_ATTRIBUTION }).addTo(map)
-    // Any move we did not make (drag, arrow keys, wheel zoom off-centre) pauses following.
+    // The operator's intent is detected when it STARTS: while the vehicle glides we re-centre every frame,
+    // which would cancel a pan in progress before it ever reached "moveend".
+    map.on('dragstart', () => follow(false))
+    map.on('keydown', (event) => {
+      if (ARROW_KEYS.includes((event as L.LeafletKeyboardEvent).originalEvent.key)) follow(false)
+    })
+    // Fallback for anything else that ends off-centre (e.g. wheel zoom at the edge of the map).
     // Zooming around the centre keeps the vehicle centred, so it does not count.
     map.on('moveend', () => {
       const marker = markerRef.current

@@ -4,7 +4,7 @@ import { DeviceSelector } from '../DeviceSelector/DeviceSelector'
 import { ErrorState } from '../ErrorState/ErrorState'
 import { FeedStatus } from '../FeedStatus/FeedStatus'
 import { VehicleMap } from '../Map/VehicleMap'
-import { CardSkeleton, MapSkeleton } from '../Skeleton/Skeleton'
+import { CardSkeleton, FeedSkeleton, MapSkeleton } from '../Skeleton/Skeleton'
 import { StatusCard } from '../StatusCard/StatusCard'
 import { ThemeToggle } from '../ThemeToggle/ThemeToggle'
 import './AppShell.css'
@@ -47,21 +47,25 @@ export function AppShell() {
           />
         ) : (
           <>
-            <div className="app-shell__map">
+            <div className="app-shell__stage">
               {phase === 'loading' ? (
-                <MapSkeleton />
+                <FeedSkeleton />
               ) : (
-                <>
-                  <VehicleMap device={monitor.selectedDevice} position={monitor.selectedPosition} />
-                  <FeedStatus
-                    mode={monitor.mode}
-                    lastFix={monitor.selectedPosition?.fixTime ?? null}
-                    demo={monitor.isDemo}
-                    onEnterDemo={monitor.canToggleDemo ? monitor.enterDemo : undefined}
-                    onExitDemo={monitor.canToggleDemo && monitor.demoRequested ? monitor.exitDemo : undefined}
-                  />
-                </>
+                <FeedStatus
+                  mode={monitor.mode}
+                  lastFix={monitor.selectedPosition?.fixTime ?? null}
+                  demo={monitor.isDemo}
+                  onEnterDemo={monitor.canToggleDemo ? monitor.enterDemo : undefined}
+                  onExitDemo={monitor.canToggleDemo && monitor.demoRequested ? monitor.exitDemo : undefined}
+                />
               )}
+              <div className="app-shell__map">
+                {phase === 'loading' ? (
+                  <MapSkeleton />
+                ) : (
+                  <VehicleMap device={monitor.selectedDevice} position={monitor.selectedPosition} />
+                )}
+              </div>
             </div>
             <div className="app-shell__panel">
               {phase === 'loading' && <CardSkeleton />}

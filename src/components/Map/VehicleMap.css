@@ -156,11 +156,24 @@
     margin-right: var(--space-3);
   }
 
+  /* Icon only on a phone (36px, same as the zoom buttons); the name stays for screen readers. */
   .vehicle-map__recenter {
     left: var(--space-3);
     bottom: calc(var(--space-3) + 26px + var(--space-2));
+    width: 36px;
     min-height: 36px;
-    padding: 0 var(--space-3);
+    padding: 0;
+    justify-content: center;
+    border-radius: 10px;
+  }
+
+  .vehicle-map__recenter-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
   }
 
   .vehicle-map .leaflet-bottom .leaflet-control {

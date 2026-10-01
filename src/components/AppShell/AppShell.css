@@ -48,9 +48,20 @@
   overflow-y: auto;
 }
 
+/* Mobile: the status strip sits ABOVE the map, in normal flow, so nothing covers the small map. */
+.app-shell__stage {
+  display: flex;
+  flex: 1 0 auto;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
 .app-shell__map {
   position: relative;
   flex: 1 0 auto;
+  align-self: stretch;
   min-width: 0;
   min-height: max(45dvh, 260px);
 }
@@ -86,7 +97,16 @@
     overflow-y: auto;
   }
 
+  /* The stage is the grid cell; the map fills it and the status floats over it, top-left. */
+  .app-shell__stage {
+    position: relative;
+    display: block;
+    min-height: 0;
+  }
+
   .app-shell__map {
+    position: absolute;
+    inset: 0;
     min-height: 0;
   }
 

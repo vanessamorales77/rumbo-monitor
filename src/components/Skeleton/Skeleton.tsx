@@ -28,6 +28,11 @@ export function CardSkeleton() {
   )
 }
 
+/** Reserves the one-line status strip that sits above the map on a phone, so it never pushes the layout down. */
+export function FeedSkeleton() {
+  return <span className="skeleton skeleton--feed" aria-hidden="true" />
+}
+
 export function MapSkeleton() {
   return (
     <div className="skeleton skeleton--map">

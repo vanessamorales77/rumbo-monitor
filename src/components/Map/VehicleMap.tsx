@@ -52,7 +52,7 @@ export function VehicleMap({ device, position }: Props) {
               <path d="M12 2v3M12 19v3M2 12h3M19 12h3" />
             </g>
           </svg>
-          Recentrar en el vehículo
+          <span className="vehicle-map__recenter-label">Recentrar en el vehículo</span>
         </button>
       )}
     </>

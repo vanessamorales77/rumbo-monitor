@@ -1,4 +1,4 @@
-/* Sits over the map, top-left; the zoom controls are bottom-right so nothing collides. */
+/* Tablet and desktop: floats over the map, top-left; the zoom controls are bottom-right so nothing collides. */
 .feed-overlay {
   position: absolute;
   top: var(--space-4);
@@ -82,14 +82,29 @@
   border-color: var(--color-accent);
 }
 
+/* Mobile: the map is small, so nothing sits on top of it. The status becomes a strip in normal flow
+   above the map; the action is an underlined text button next to it (32px tall, above the 24px WCAG 2.2
+   minimum) that wraps onto its own line when the status text is long. */
 @media (max-width: 767px) {
   .feed-overlay {
-    top: var(--space-3);
-    left: var(--space-3);
-    max-width: calc(100% - var(--space-3) * 2 - 48px);
+    position: static;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0 var(--space-3);
+    max-width: 100%;
+    pointer-events: auto;
   }
 
   .feed-overlay__action {
-    min-height: 36px;
+    min-height: 32px;
+    padding: 0;
+    border: 0;
+    border-radius: var(--radius-sm);
+    background: none;
+    box-shadow: none;
+    color: var(--color-accent);
+    text-decoration: underline;
+    text-underline-offset: 3px;
   }
 }
