@@ -8,7 +8,7 @@ const ago = (seconds: number) => new Date(Date.now() - seconds * 1000).toISOStri
 const meta = {
   title: 'Componentes/Estado del flujo',
   component: FeedStatus,
-  args: { mode: 'live', onlineCount: 3, lastFix: ago(4), demo: false, onEnterDemo: fn(), onExitDemo: fn() },
+  args: { mode: 'live', onlineCount: 2, totalCount: 3, lastFix: ago(4), demo: false, onEnterDemo: fn(), onExitDemo: fn() },
   decorators: [
     // The side-by-side story lays itself out (parameters.fullWidth), so it skips this fixed frame.
     (Story, { parameters }) =>

@@ -1,5 +1,6 @@
 import type { FeedMode } from '../../api'
 import { useNow } from '../../hooks/useNow'
+import { FleetSummary } from '../FleetSummary/FleetSummary'
 import { isStale } from '../../utils/status'
 import { formatRelative } from '../../utils/time'
 import './FeedStatus.css'
@@ -10,6 +11,8 @@ interface Props {
   mode: FeedMode
   /** How many vehicles of the fleet report as online. */
   onlineCount: number
+  /** How many vehicles the fleet has. */
+  totalCount: number
   /** ISO time of the freshest position among the online vehicles (null if none has one). The warning is about the whole fleet:
    *  one idle or offline vehicle is not a feed problem, and its own age is already on the status card. */
   lastFix: string | null
@@ -26,7 +29,7 @@ interface Props {
  * Connected is not the same as fresh: a live socket can still deliver nothing new.
  * Dot + text, never colour alone; changes are announced politely.
  */
-export function FeedStatus({ mode, onlineCount, lastFix, demo, onEnterDemo, onExitDemo }: Props) {
+export function FeedStatus({ mode, onlineCount, totalCount, lastFix, demo, onEnterDemo, onExitDemo }: Props) {
   const now = useNow(10_000)
   const quiet = onlineCount === 0
   // Vehicles report as online but not one has ever sent a position: connected, yet nothing to show.
@@ -60,6 +63,9 @@ export function FeedStatus({ mode, onlineCount, lastFix, demo, onEnterDemo, onEx
         <span className="feed-status__dot" aria-hidden="true" />
         {text[kind]}
       </p>
+      {(kind === 'live' || kind === 'polling') && (
+        <FleetSummary className="feed-overlay__fleet" online={onlineCount} total={totalCount} />
+      )}
       {action && (
         <button type="button" className="feed-overlay__action" onClick={action.run}>
           {action.label}

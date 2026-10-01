@@ -36,6 +36,11 @@ export const EnLinea: Story = {
   args: { device: makeDevice(), position: makePosition({ speedKmh: 34, battery: 79 }) },
 }
 
+export const SinPlaca: Story = {
+  name: 'Nombre sin placa',
+  args: { device: makeDevice({ name: 'Camioneta de reparto' }), position: makePosition({ speedKmh: 34, battery: 79 }) },
+}
+
 export const Detenido: Story = {
   name: 'Detenido',
   args: { device: makeDevice(), position: makePosition({ speedKmh: 0, battery: 64 }) },

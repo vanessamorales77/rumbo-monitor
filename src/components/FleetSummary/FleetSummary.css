@@ -1,0 +1,21 @@
+.fleet-summary {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  line-height: 20px;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.fleet-summary__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-full);
+  background: var(--color-neutral);
+}
+
+.fleet-summary--active .fleet-summary__dot {
+  background: var(--color-success);
+}

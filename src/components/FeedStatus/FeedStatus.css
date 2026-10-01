@@ -108,3 +108,10 @@
     text-underline-offset: 3px;
   }
 }
+
+/* The fleet summary lives in the header from tablet up; it only appears in the strip on phones. */
+@media (min-width: 768px) {
+  .feed-overlay__fleet {
+    display: none;
+  }
+}

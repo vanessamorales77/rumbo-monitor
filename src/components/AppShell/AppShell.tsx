@@ -1,8 +1,10 @@
 import { useMonitor } from '../../hooks/useMonitor'
 import { useTheme } from '../../hooks/useTheme'
+import { BrandMark } from '../BrandMark/BrandMark'
 import { DeviceSelector } from '../DeviceSelector/DeviceSelector'
 import { ErrorState } from '../ErrorState/ErrorState'
 import { FeedStatus } from '../FeedStatus/FeedStatus'
+import { FleetSummary } from '../FleetSummary/FleetSummary'
 import { VehicleMap } from '../Map/VehicleMap'
 import { CardSkeleton, FeedSkeleton, MapSkeleton } from '../Skeleton/Skeleton'
 import { StatusCard } from '../StatusCard/StatusCard'
@@ -22,17 +24,21 @@ export function AppShell() {
 
       <header className="app-shell__bar">
         <h1 className="app-shell__brand">
-          <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false" className="app-shell__mark">
-            <path d="M12 2l2.6 7.4L22 12l-7.4 2.6L12 22l-2.6-7.4L2 12l7.4-2.6z" fill="currentColor" />
-          </svg>
+          <span className="app-shell__mark">
+            <BrandMark size={26} />
+          </span>
           Rumbo
         </h1>
         <div className="app-shell__controls">
+          {phase === 'ready' && (
+            <FleetSummary className="app-shell__fleet" online={monitor.fleet.online} total={monitor.fleet.total} />
+          )}
           <DeviceSelector
             devices={monitor.devices}
             selectedId={monitor.selectedId}
             onSelect={monitor.select}
             disabled={phase !== 'ready'}
+            loading={phase === 'loading'}
           />
           <ThemeToggle theme={theme} onToggle={toggle} />
         </div>
@@ -54,6 +60,7 @@ export function AppShell() {
                 <FeedStatus
                   mode={monitor.mode}
                   onlineCount={monitor.fleet.online}
+                  totalCount={monitor.fleet.total}
                   lastFix={monitor.fleet.freshestFix}
                   demo={monitor.isDemo}
                   onEnterDemo={monitor.canToggleDemo ? monitor.enterDemo : undefined}

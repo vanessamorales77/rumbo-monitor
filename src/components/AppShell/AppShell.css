@@ -36,6 +36,18 @@
   gap: var(--space-3);
 }
 
+/* Phones have no room in the header: the summary sits in the status strip above the map instead. */
+.app-shell__fleet {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .app-shell__fleet {
+    display: inline-flex;
+    margin-right: var(--space-2);
+  }
+}
+
 /* Mobile: map on top, status card below in normal flow. Nothing overlaps the map,
    so the marker is never hidden and the layout survives short screens (page scrolls). */
 .app-shell__main {

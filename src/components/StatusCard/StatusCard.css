@@ -22,10 +22,12 @@
   border-bottom: 1px solid var(--color-border);
 }
 
-.status-card__eyebrow {
-  font-size: var(--font-size-sm);
-  line-height: var(--row-label-height);
-  color: var(--color-text-muted);
+/* Plate and connection state share one row; both are 28px tall, like their skeletons. */
+.status-card__badges {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
 }
 
 .status-card__title {
@@ -96,9 +98,11 @@
 }
 
 .status-card__number {
+  font-family: var(--font-display);
   font-size: var(--font-size-display);
   font-weight: var(--font-weight-semibold);
   line-height: 1;
+  letter-spacing: -0.01em;
 }
 
 .status-card__unit {
@@ -240,7 +244,7 @@
   }
 
   .status-card__number {
-    font-size: 2.75rem;
+    font-size: 3.5rem;
   }
 }
 
@@ -269,6 +273,17 @@
   }
 
   .status-card__number {
-    font-size: 2.75rem;
+    font-size: 3.5rem;
+  }
+}
+
+/* The real card fades in over its skeleton's footprint (same size, so nothing moves). */
+.status-card--enter {
+  animation: status-card-in 250ms var(--ease-standard);
+}
+
+@keyframes status-card-in {
+  from {
+    opacity: 0;
   }
 }

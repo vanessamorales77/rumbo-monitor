@@ -34,6 +34,23 @@ export const Mapa: Story = {
   ),
 }
 
+export const MapaTardando: Story = {
+  name: 'Mapa: tardando más de lo normal',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Pasados 5 s sin datos, el texto de carga admite la demora en lugar de seguir igual: en una sala de control, el silencio es lo peor. Aquí se fuerza con `slow`.',
+      },
+    },
+  },
+  render: () => (
+    <div style={{ position: 'relative', width: '32rem', height: '20rem' }}>
+      <MapSkeleton slow />
+    </div>
+  ),
+}
+
 export const FranjaDeEstado: Story = {
   name: 'Franja de estado (móvil)',
   globals: { viewport: { value: 'mobile1', isRotated: false } },

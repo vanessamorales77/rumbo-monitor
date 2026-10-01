@@ -33,6 +33,12 @@
   height: 28px;
 }
 
+.skeleton--plate {
+  width: 5.5rem;
+  height: 28px;
+  border-radius: 6px;
+}
+
 .skeleton--pill {
   width: 96px;
   height: 28px;
@@ -41,11 +47,6 @@
 
 .skeleton--label {
   width: 40%;
-  height: var(--row-label-height);
-}
-
-.skeleton--eyebrow {
-  width: 35%;
   height: var(--row-label-height);
 }
 
@@ -65,7 +66,15 @@
 .skeleton--map {
   position: absolute;
   inset: 0;
+  /* Above the Leaflet panes: the same cover is kept over the map until its tiles have loaded. */
+  z-index: 1100;
   border-radius: var(--radius-lg);
+}
+
+.skeleton--leaving {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 300ms var(--ease-standard);
 }
 
 .skeleton-map__pill {

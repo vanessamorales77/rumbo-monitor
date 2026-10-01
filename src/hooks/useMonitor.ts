@@ -92,7 +92,7 @@ export function useMonitor() {
       const fix = positions[device.id]?.fixTime
       if (fix && (freshestFix === null || Date.parse(fix) > Date.parse(freshestFix))) freshestFix = fix
     }
-    return { online: online.length, freshestFix }
+    return { online: online.length, total: devices.length, freshestFix }
   }, [devices, positions])
 
   const selectedDevice = devices.find((d) => d.id === selectedId) ?? null

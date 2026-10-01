@@ -42,3 +42,10 @@
   transform: rotate(45deg);
   pointer-events: none;
 }
+
+/* Same width while loading and loaded, so the header does not shift when the vehicles arrive. */
+@media (min-width: 768px) {
+  .device-selector {
+    min-width: 15rem;
+  }
+}

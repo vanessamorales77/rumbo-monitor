@@ -3,12 +3,14 @@
 :root {
   /* Typography */
   --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  /* Speed numeral only: road-sign lettering, condensed so the number can be big without taking the card. */
+  --font-display: 'Barlow Condensed', 'Inter', system-ui, sans-serif;
   /* 14px is the floor everywhere (design rule). */
   --font-size-sm: 0.875rem;
   --font-size-md: 1rem;
   --font-size-lg: 1.125rem;
   --font-size-xl: 1.25rem;
-  --font-size-display: 3.5rem;
+  --font-size-display: 4.5rem;
   --font-weight-regular: 400;
   --font-weight-medium: 500;
   --font-weight-semibold: 600;
@@ -36,6 +38,11 @@
   --duration-base: 250ms;
   --duration-slow: 600ms;
   --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+
+  /* Licence plate chip (same in both themes: it imitates the real plate) */
+  --plate-bg: #f7cf2e;
+  --plate-text: #1b1b1b;
+  --plate-border: #1b1b1b;
 
   /* Layout */
   --header-height: 64px;

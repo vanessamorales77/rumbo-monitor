@@ -5,7 +5,9 @@ import { useTweenedNumber } from '../../hooks/useTweenedNumber'
 import { connectionLabel, hasCurrentSpeed } from '../../utils/status'
 import { formatRelative } from '../../utils/time'
 import { knotsToKmh } from '../../utils/units'
+import { splitVehicleName } from '../../utils/vehicleName'
 import { ConnectionIndicator } from '../ConnectionIndicator/ConnectionIndicator'
+import { LicensePlate } from '../LicensePlate/LicensePlate'
 import { AnimatedValue } from './AnimatedValue'
 import { BatteryBar } from './BatteryBar'
 import { FadeText } from './FadeText'
@@ -22,6 +24,7 @@ interface Props {
 
 export function StatusCard({ device, position }: Props) {
   const now = useNow()
+  const { model, plate } = splitVehicleName(device.name)
   const lastSpeed = position ? knotsToKmh(position.speed) : null
   // Without a connection (or with an old fix) we do not know the speed: it is NOT zero, the vehicle may still
   // be moving. Show the last known value as history and never as a current reading.
@@ -35,13 +38,15 @@ export function StatusCard({ device, position }: Props) {
   const announcement = useAnnouncement(device, speed, batteryLow)
 
   return (
-    <section className="status-card" aria-labelledby="status-card-title">
+    <section className="status-card status-card--enter" aria-labelledby="status-card-title">
       <header className="status-card__header">
-        <p className="status-card__eyebrow">Vehículo activo</p>
         <h2 id="status-card-title" className="status-card__title">
-          {device.name}
+          {model}
         </h2>
-        <ConnectionIndicator status={device.status} />
+        <div className="status-card__badges">
+          {plate && <LicensePlate value={plate} />}
+          <ConnectionIndicator status={device.status} />
+        </div>
       </header>
 
       <dl className="status-card__data">

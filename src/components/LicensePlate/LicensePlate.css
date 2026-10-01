@@ -1,0 +1,16 @@
+/* Yellow plate, dark characters: the same in both themes because it is a physical object, not UI chrome. */
+.license-plate {
+  display: inline-flex;
+  align-items: center;
+  height: 28px;
+  padding: 0 var(--space-2);
+  border: 1.5px solid var(--plate-border);
+  border-radius: 6px;
+  background: var(--plate-bg);
+  color: var(--plate-text);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.08em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
