@@ -53,7 +53,7 @@ export function AppShell() {
               ) : (
                 <FeedStatus
                   mode={monitor.mode}
-                  lastFix={monitor.selectedPosition?.fixTime ?? null}
+                  lastFix={monitor.selectedDevice?.status === 'online' ? (monitor.selectedPosition?.fixTime ?? null) : null}
                   demo={monitor.isDemo}
                   onEnterDemo={monitor.canToggleDemo ? monitor.enterDemo : undefined}
                   onExitDemo={monitor.canToggleDemo && monitor.demoRequested ? monitor.exitDemo : undefined}

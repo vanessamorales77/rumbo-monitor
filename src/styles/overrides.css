@@ -1,0 +1,87 @@
+/* Environment overrides (high-contrast mode, print).
+   Imported AFTER every component stylesheet (see main.tsx): these rules have the same specificity as the
+   component rules they override, so source order is what makes them win. */
+
+/* Windows high-contrast / forced colours: the browser drops background colours, so shapes that
+   are drawn with them (dots, bars, gauge, marker) are redrawn with system colours. */
+@media (forced-colors: active) {
+  .connection__dot,
+  .feed-status__dot {
+    background: CanvasText;
+    forced-color-adjust: none;
+  }
+
+  .battery-bar__segment {
+    background: GrayText;
+    forced-color-adjust: none;
+  }
+
+  .battery-bar__segment--on {
+    background: Highlight;
+  }
+
+  .speed-gauge__track {
+    stroke: GrayText;
+  }
+
+  .speed-gauge__arc {
+    stroke: Highlight;
+  }
+
+  .vehicle-marker__arrow {
+    fill: Highlight;
+  }
+
+  .vehicle-marker__disc {
+    fill: Canvas;
+    stroke: CanvasText;
+  }
+
+  .vehicle-marker__halo {
+    display: none;
+  }
+}
+
+/* Print: a snapshot of the screen, without the controls and without the viewport-height layout. */
+@media print {
+  .app-shell {
+    height: auto;
+  }
+
+  .app-shell__main {
+    display: block;
+    overflow: visible;
+  }
+
+  .app-shell__stage {
+    position: static;
+    display: block;
+  }
+
+  .app-shell__map {
+    position: relative;
+    inset: auto;
+    height: 90mm;
+    min-height: 0;
+    margin-bottom: var(--space-4);
+  }
+
+  .feed-overlay {
+    position: static;
+    margin-bottom: var(--space-3);
+  }
+
+  .skip-link,
+  .theme-toggle,
+  .device-selector__chevron,
+  .feed-overlay__action,
+  .vehicle-map__recenter,
+  .vehicle-map .leaflet-control-zoom {
+    display: none;
+  }
+
+  .app-shell__bar,
+  .status-card {
+    box-shadow: none;
+  }
+}

@@ -105,7 +105,7 @@ npm run simulate -- --host=demo4.traccar.org --interval=10
 | **Cargando** | Esqueletos de mapa y tarjeta con las mismas clases y alturas que el contenido real, para evitar saltos de layout (CLS). El `<main>` marca `aria-busy` |
 | **Error** | Pantalla con mensaje distinto según la causa (red, tiempo agotado, credenciales, servidor), foco en el título y botón **Reintentar** de 44 px. Ofrece además ver el modo demostración |
 | **En vivo / Polling** | Indicador sobre el mapa: "En vivo" (WebSocket) o "Actualizando cada 5 s" |
-| **Sin datos nuevos** | Conectado, pero la última posición tiene más de 2 minutos |
+| **Sin datos nuevos** | Un vehículo que figura en línea, pero cuya última posición tiene más de 2 minutos. Un vehículo sin conexión no activa este aviso (su antigüedad ya está en la tarjeta) |
 | **Sin conexión** | El _polling_ falla: "Sin conexión · datos desactualizados" |
 | **Modo demostración** | Datos simulados, siempre rotulados y con un rombo en lugar de un punto, para que nunca parezcan datos reales. Se puede volver a los reales |
 | **Sin señal / sin datos nuevos** | La velocidad **no es cero**: sin conexión (o con una posición de más de 2 minutos) no se sabe, y el vehículo podría seguir moviéndose. En el arco se lee "Sin señal" (offline) o "Sin datos nuevos", con "Última: N km/h" debajo como dato histórico |
@@ -130,7 +130,8 @@ Tokens en CSS _custom properties_:
 
 - [tokens.css](src/styles/tokens.css): tipografía, escala de espaciado de 4 px, radios, movimiento, tamaños de objetivo táctil y de anillo de foco.
 - [themes.css](src/styles/themes.css): paleta de color clara y oscura, sombras y filtros del mapa. Cada color documenta su ratio de contraste sobre la superficie donde se usa.
-- [base.css](src/styles/base.css): reset, foco global, enlace de salto, `prefers-reduced-motion`, `forced-colors` e impresión.
+- [base.css](src/styles/base.css): reset, foco global, enlace de salto y `prefers-reduced-motion`.
+- [overrides.css](src/styles/overrides.css): `forced-colors` (alto contraste de Windows) e impresión. Se importa **después** de todos los componentes, porque sus reglas tienen la misma especificidad y solo ganan por orden de carga.
 
 ## Accesibilidad (WCAG 2.1 AA)
 
@@ -183,6 +184,7 @@ _Pendiente._ La app necesita que `/api` (REST y WebSocket) llegue a Traccar desd
 
 - Los _tiles_ de OpenStreetMap sirven para una demostración, pero su [política de uso](https://operations.osmfoundation.org/policies/tiles/) no cubre tráfico real; para eso, configura `VITE_TILE_URL` con un proveedor con clave.
 - Los servidores públicos de Traccar son compartidos: pueden caerse un momento o limitar el almacenamiento (ver el presupuesto del simulador).
+- La antigüedad de una posición ("sin datos nuevos") se calcula con el reloj del navegador. Si el equipo del operador va desfasado más de 2 minutos respecto al servidor, los datos pueden verse como viejos aunque lleguen en vivo, o al revés.
 - No hay pruebas automáticas todavía.
 
 ## Uso de IA

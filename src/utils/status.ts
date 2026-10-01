@@ -9,6 +9,10 @@ const LABELS: Record<DeviceStatus, string> = {
 /** A position older than this, on a feed that looks connected, counts as "no new data". */
 const STALE_AFTER_MS = 2 * 60_000
 
+/** Offline vehicles and old fixes have no current speed: it is unknown, not zero. */
+export const hasCurrentSpeed = (status: DeviceStatus, fixTime: string, now: number): boolean =>
+  status !== 'offline' && !isStale(fixTime, now)
+
 export const isStale = (fixTime: string, now: number): boolean => now - Date.parse(fixTime) > STALE_AFTER_MS
 
 export const connectionLabel = (status: DeviceStatus): string => LABELS[status]

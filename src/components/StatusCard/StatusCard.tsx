@@ -2,7 +2,7 @@ import { useState } from 'react'
 import type { Device, Position } from '../../api'
 import { useNow } from '../../hooks/useNow'
 import { useTweenedNumber } from '../../hooks/useTweenedNumber'
-import { connectionLabel, isStale } from '../../utils/status'
+import { connectionLabel, hasCurrentSpeed } from '../../utils/status'
 import { formatRelative } from '../../utils/time'
 import { knotsToKmh } from '../../utils/units'
 import { ConnectionIndicator } from '../ConnectionIndicator/ConnectionIndicator'
@@ -25,10 +25,8 @@ export function StatusCard({ device, position }: Props) {
   // Without a connection (or with an old fix) we do not know the speed: it is NOT zero, the vehicle may still
   // be moving. Show the last known value as history and never as a current reading.
   const offline = device.status === 'offline'
-  const stale = position !== null && isStale(position.fixTime, now)
-  const noData = offline || stale
-  const speed = noData ? null : lastSpeed
-  const noDataLabel = offline ? 'Sin señal' : stale ? 'Sin datos nuevos' : 'Sin datos'
+  const speed = position && hasCurrentSpeed(device.status, position.fixTime, now) ? lastSpeed : null
+  const noDataLabel = offline ? 'Sin señal' : position ? 'Sin datos nuevos' : 'Sin datos'
   const battery = position?.attributes.batteryLevel ?? null
   const batteryLow = battery !== null && battery <= LOW_BATTERY
   const shownSpeed = useTweenedNumber(speed)

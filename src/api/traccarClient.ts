@@ -130,8 +130,10 @@ export function createTraccarSource(config: TraccarConfig): TelemetrySource {
           positions.forEach(handlers.onPosition)
           handlers.onMode('polling')
         } catch {
+          // Polling was stopped (socket back, or disposed) while this request was in flight: not a failure.
+          if (disposed || pollTimer === undefined) return
           failures += 1
-          if (!disposed && pollTimer !== undefined && failures >= LOST_AFTER_FAILURES) handlers.onMode('lost')
+          if (failures >= LOST_AFTER_FAILURES) handlers.onMode('lost')
         } finally {
           polling = false
         }

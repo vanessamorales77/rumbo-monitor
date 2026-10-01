@@ -8,7 +8,8 @@ type Kind = FeedMode | 'stale' | 'demo'
 
 interface Props {
   mode: FeedMode
-  /** ISO time of the selected vehicle's last position, if it has one. */
+  /** ISO time of the last position of the selected vehicle, only if it reports as online: an offline or
+   *  idle vehicle is not a feed problem, and its age is already on the status card. */
   lastFix: string | null
   /** The data on screen is simulated. */
   demo: boolean

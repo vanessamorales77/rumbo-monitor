@@ -1,7 +1,8 @@
 import { useRef } from 'react'
 import 'leaflet/dist/leaflet.css'
 import type { Device, Position } from '../../api'
-import { connectionLabel } from '../../utils/status'
+import { useNow } from '../../hooks/useNow'
+import { connectionLabel, hasCurrentSpeed } from '../../utils/status'
 import { knotsToKmh } from '../../utils/units'
 import { useVehicleMarker } from './useVehicleMarker'
 import './VehicleMap.css'
@@ -14,8 +15,9 @@ interface Props {
 export function VehicleMap({ device, position }: Props) {
   const containerRef = useRef<HTMLDivElement>(null)
 
-  // An offline vehicle's last speed is history, not a reading: leave it out of the name.
-  const moving = position && device?.status !== 'offline'
+  const now = useNow(10_000)
+  // Same rule as the status card: a missing or old speed is history, not a reading, so leave it out of the name.
+  const moving = device && position && hasCurrentSpeed(device.status, position.fixTime, now)
   const label = device
     ? `${device.name}, ${connectionLabel(device.status)}${
         moving ? `, ${knotsToKmh(position.speed)} kilómetros por hora, rumbo ${Math.round(position.course)} grados` : ''

@@ -86,7 +86,9 @@ export function useVehicleMarker({ containerRef, latitude, longitude, course, st
     // which would cancel a pan in progress before it ever reached "moveend".
     map.on('dragstart', () => follow(false))
     map.on('keydown', (event) => {
-      if (ARROW_KEYS.includes((event as L.LeafletKeyboardEvent).originalEvent.key)) follow(false)
+      const { key, target } = (event as L.LeafletKeyboardEvent).originalEvent
+      // Leaflet only pans when the map itself has focus; arrows on the zoom buttons do not move anything.
+      if (target === map.getContainer() && ARROW_KEYS.includes(key)) follow(false)
     })
     // Fallback for anything else that ends off-centre (e.g. wheel zoom at the edge of the map).
     // Zooming around the centre keeps the vehicle centred, so it does not count.
