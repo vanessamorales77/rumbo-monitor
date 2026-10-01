@@ -1,11 +1,15 @@
-import { useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import 'leaflet/dist/leaflet.css'
 import type { Device, Position } from '../../api'
 import { useNow } from '../../hooks/useNow'
 import { connectionLabel, hasCurrentSpeed } from '../../utils/status'
 import { knotsToKmh } from '../../utils/units'
+import { MapSkeleton } from '../Skeleton/Skeleton'
 import { useVehicleMarker } from './useVehicleMarker'
 import './VehicleMap.css'
+
+/** Must match the fade-out duration of `.skeleton--leaving`. */
+const COVER_FADE_MS = 350
 
 interface Props {
   device: Device | null
@@ -24,7 +28,7 @@ export function VehicleMap({ device, position }: Props) {
       }`
     : 'Vehículo'
 
-  const { following, recenter } = useVehicleMarker({
+  const { mapReady } = useVehicleMarker({
     containerRef,
     latitude: position?.latitude ?? null,
     longitude: position?.longitude ?? null,
@@ -32,31 +36,22 @@ export function VehicleMap({ device, position }: Props) {
     status: device?.status ?? 'unknown',
     label,
     snapKey: device?.id ?? null,
+    fixTime: position?.fixTime ?? null,
   })
+
+  // The loading cover (same look as the skeleton before it) stays until the tiles around the vehicle have loaded,
+  // then fades out: the map never shows up half-painted.
+  const [covered, setCovered] = useState(true)
+  useEffect(() => {
+    if (!mapReady) return
+    const timer = window.setTimeout(() => setCovered(false), COVER_FADE_MS)
+    return () => window.clearTimeout(timer)
+  }, [mapReady])
 
   return (
     <>
       <div ref={containerRef} className="vehicle-map" role="region" aria-label="Mapa de ubicación del vehículo" />
-      {!following && (
-        <button
-          type="button"
-          className="vehicle-map__recenter"
-          onClick={() => {
-            recenter()
-            // The button is about to disappear: keep keyboard users on the map instead of losing focus.
-            containerRef.current?.focus()
-          }}
-        >
-          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false">
-            <g fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-              <circle cx="12" cy="12" r="7" />
-              <circle cx="12" cy="12" r="2" fill="currentColor" />
-              <path d="M12 2v3M12 19v3M2 12h3M19 12h3" />
-            </g>
-          </svg>
-          <span className="vehicle-map__recenter-label">Recentrar en el vehículo</span>
-        </button>
-      )}
+      {covered && <MapSkeleton leaving={mapReady} />}
     </>
   )
 }

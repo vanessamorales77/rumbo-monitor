@@ -17,7 +17,7 @@ Repositorio: <https://github.com/vanessamorales77/rumbo-monitor>
 | Framework | React 19 + TypeScript, Vite 8 |
 | Mapa | Leaflet (marcador SVG propio) |
 | Estilos | CSS tradicional con _custom properties_ (tokens), sin framework de UI |
-| Tipografía | Inter autoalojada con `@fontsource/inter` (sin peticiones a terceros) |
+| Tipografía | Inter (interfaz) y Barlow Condensed (solo la cifra de velocidad), autoalojadas con `@fontsource` (sin peticiones a terceros) |
 | Lint | Oxlint |
 | Documentación de componentes | Storybook 10 (con el addon de accesibilidad) |
 
@@ -102,7 +102,7 @@ npm run simulate -- --host=demo4.traccar.org --interval=10
 
 | Estado | Qué ve el operador |
 | --- | --- |
-| **Cargando** | Esqueletos de mapa y tarjeta con las mismas clases y alturas que el contenido real, para evitar saltos de layout (CLS). El `<main>` marca `aria-busy` |
+| **Cargando** | Esqueletos de mapa y tarjeta con las mismas clases y alturas que el contenido real, para evitar saltos de layout (CLS); el selector de la cabecera conserva su ancho ("Cargando vehículos…"). La carga cubre también los _tiles_: el esqueleto del mapa sigue hasta que cargan las teselas alrededor del vehículo y se desvanece, así el mapa no aparece a medio pintar. La tarjeta entra con un fundido corto. Si pasan más de 5 s, el texto admite la demora ("Está tardando más de lo normal…") en vez de callar. El `<main>` marca `aria-busy` |
 | **Error** | Pantalla con mensaje distinto según la causa (red, tiempo agotado, credenciales, servidor), foco en el título y botón **Reintentar** de 44 px. Ofrece además ver el modo demostración |
 | **En vivo / Polling** | Indicador sobre el mapa: "En vivo" (WebSocket) o "Actualizando cada 5 s" |
 | **Sin datos nuevos / Ningún vehículo en línea** | El aviso es sobre **la flota**, no sobre el vehículo seleccionado: aparece si ningún vehículo figura en línea ("Ningún vehículo en línea") si los que lo están no han enviado ninguna posición, o si el más reciente lleva más de 2 minutos sin reportar. Un solo vehículo quieto o sin conexión no lo activa (su antigüedad ya está en la tarjeta). En ambos casos se ofrece el modo demostración |
@@ -114,15 +114,17 @@ npm run simulate -- --host=demo4.traccar.org --interval=10
 
 ## Decisiones de diseño
 
+- **Identidad:** la marca es el propio marcador (la misma flecha dentro de un aro), que es lo que el operador vigila en el mapa; también es el favicon. La placa se muestra como una placa (fondo amarillo, caracteres oscuros) junto al modelo, y la cabecera resume la flota ("2 de 3 en línea"; en móvil, ese resumen va en la franja sobre el mapa). La cifra de velocidad usa Barlow Condensed, una tipografía de rotulación vial, y el resto Inter.
 - **Jerarquía de la tarjeta:** primero _quién_ (nombre) y _si está vivo_ (conexión), después lo que cambia más rápido (velocidad, con un arco como eco visual del número) y por último batería y frescura del dato.
 - **Velocidad:** Traccar entrega nudos; se convierte a km/h con `knots × 1,852` y se redondea.
 - **"Conectado" no es "fresco":** un socket abierto puede no entregar nada nuevo, por eso la antigüedad de la última posición se evalúa aparte.
+- **Rastro del vehículo:** detrás del marcador queda una estela que se desvanece con sus últimas ~40 posiciones, para ver de dónde viene y hacia dónde va sin tener que recordarlo. Un vehículo parado no deja rastro y se reinicia al cambiar de vehículo. Si hay un silencio de más de 60 s entre dos posiciones, el marcador salta y el rastro empieza de nuevo, en lugar de dibujar una línea recta (un "vuelo") sobre un trayecto que no se conoce; lo mismo con la pestaña oculta o con el movimiento reducido: sin animar, pero sin perder puntos. El rastro une posiciones GPS con líneas rectas, así que con posiciones muy espaciadas corta las esquinas en los giros (no se ajusta a las calles). Se acumula durante la sesión (no se pide el historial a Traccar).
 - **Marcador SVG:** el aro y el halo llevan el estado de conexión (verde, gris o ámbar) y la flecha la dirección (`course`). La rotación toma el camino corto (350° → 10° gira 20°, no 340°).
-- **Movimiento:** el marcador se desliza 1,8 s con _easing_ entre posiciones (`requestAnimationFrame`) y el mapa lo sigue mientras no se mueva a mano. Si el operador arrastra el mapa o usa las flechas del teclado, el seguimiento se pausa **en ese instante** (no al terminar el gesto, porque mientras el vehículo se desliza el mapa se recentra en cada frame y cancelaría el movimiento) y aparece **Recentrar en el vehículo**. En móvil ese botón es solo un icono de 36 px, con el nombre disponible para lectores de pantalla.
+- **Movimiento y centrado:** el marcador se desliza 1,8 s con _easing_ entre posiciones (`requestAnimationFrame`) y el mapa lo mantiene siempre en el centro, como pide el reto, sin botón ni modo manual. El operador puede mirar alrededor (arrastrar o usar las flechas): el mapa vuelve al vehículo con suavidad en cuanto llega la siguiente posición, nunca en mitad del arrastre. El zoom (rueda, doble clic, pellizco) se hace siempre sobre el vehículo. Si hay un silencio de más de 60 s entre dos posiciones, el marcador salta en vez de "volar".
 - **Micro-interacciones:** los números se animan hacia su nuevo valor y se resaltan con un realce suave que se desvanece; el texto relativo ("Hace 15 segundos") cambia con un fundido. Se actualizan en pasos de 5 s para que no cambie cada segundo.
 - **Tema claro/oscuro:** se guarda la preferencia (o se toma la del sistema) y se aplica antes del primer pintado, sin destello. El mapa oscuro recolorea solo los _tiles_, no los marcadores ni los controles.
 - **Responsive:** móvil con mapa arriba y tarjeta debajo (la página hace scroll); tablet y escritorio en dos columnas con mapa y tarjeta siempre de la misma altura.
-- **El mapa móvil no se tapa:** en tablet y escritorio el estado del flujo flota sobre el mapa, arriba a la izquierda. En móvil el mapa es pequeño, así que ese estado y su botón ("Ver modo demostración" o "Volver a datos reales") pasan a una franja **encima** del mapa, en el flujo normal de la página. Durante la carga se reserva el hueco de esa franja para que no haya saltos de layout. En el mapa solo quedan el zoom y, si hace falta, el icono de recentrar.
+- **El mapa móvil no se tapa:** en tablet y escritorio el estado del flujo flota sobre el mapa, arriba a la izquierda. En móvil el mapa es pequeño, así que ese estado y su botón ("Ver modo demostración" o "Volver a datos reales") pasan a una franja **encima** del mapa, en el flujo normal de la página. Durante la carga se reserva el hueco de esa franja para que no haya saltos de layout. En el mapa solo queda el zoom.
 
 ## Sistema de diseño
 
@@ -136,11 +138,11 @@ Tokens en CSS _custom properties_:
 ## Accesibilidad (WCAG 2.1 AA)
 
 - **Semántica:** la tarjeta usa `<section>` etiquetada y lista de descripción (`<dl>`, `<dt>`, `<dd>`); la fecha va en `<time dateTime>`; `lang="es"`; enlace "Saltar al contenido".
-- **Teclado:** todo es operable con Tab, Espacio y Enter: selector de vehículo (`<select>` nativo), interruptor de tema (`role="switch"`), zoom, recentrar, reintentar. El mapa se puede mover con las flechas. Los objetivos táctiles miden 44 px, o 32–36 px en móvil (por encima del mínimo de 24 px de WCAG 2.2).
+- **Teclado:** todo es operable con Tab, Espacio y Enter: selector de vehículo (`<select>` nativo), interruptor de tema (`role="switch"`), zoom, reintentar. El mapa se puede mover con las flechas. Los objetivos táctiles miden 44 px, o 32–36 px en móvil (por encima del mínimo de 24 px de WCAG 2.2).
 - **Foco:** anillo de 3 px de alto contraste con `:focus-visible`; el contorno sigue el radio de cada control. El único `outline: none` (el título del error, que solo recibe foco por programa) tiene el botón de reintento como reemplazo visible.
 - **Lectores de pantalla:** región `aria-live` oculta que anuncia solo cambios relevantes (conexión, batería baja, saltos de velocidad de 10 km/h o más), no cada posición. El indicador de flujo es `role="status"`. El mapa es una región con nombre y el marcador una imagen con descripción (nombre, estado, velocidad y rumbo).
 - **Color:** el estado nunca depende solo del color (punto más texto). Texto de al menos 14 px.
-- **Movimiento:** con `prefers-reduced-motion` se desactivan transiciones, el deslizamiento del marcador y los resaltes.
+- **Movimiento y centrado:** el marcador se desliza 1,8 s con _easing_ entre posiciones (`requestAnimationFrame`) y el mapa lo mantiene siempre en el centro, como pide el reto, sin botón ni modo manual. El operador puede mirar alrededor (arrastrar o usar las flechas): el mapa vuelve al vehículo con suavidad en cuanto llega la siguiente posición, nunca en mitad del arrastre. El zoom (rueda, doble clic, pellizco) se hace siempre sobre el vehículo. Si hay un silencio de más de 60 s entre dos posiciones, el marcador salta en vez de "volar".
 - **Verificado:** axe-core sin violaciones en claro y oscuro; contraste calculado de todo el texto visible (4,5:1, o 3:1 en texto grande) y de los bordes de controles (3:1). **Aún sin probar con un lector de pantalla real** (NVDA o VoiceOver).
 
 ## Storybook

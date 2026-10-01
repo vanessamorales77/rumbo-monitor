@@ -13,7 +13,7 @@ const meta = {
     docs: {
       description: {
         component:
-          'Mapa de Leaflet con un marcador SVG que muestra la dirección (`course`) y el estado de conexión. Se desliza entre posiciones y el mapa lo sigue; si el operador arrastra el mapa o usa las flechas, el seguimiento se pausa y aparece **Recentrar en el vehículo**. Necesita red para cargar los _tiles_.',
+          'Mapa de Leaflet con un marcador SVG que muestra la dirección (`course`) y el estado de conexión. Se desliza entre posiciones y el mapa lo mantiene en el centro; si el operador arrastra el mapa o usa las flechas, vuelve al vehículo con suavidad en cuanto llega la siguiente posición. Mientras cargan los _tiles_ se muestra la cubierta de carga, que se desvanece. Necesita red para cargar los _tiles_.',
       },
     },
   },
@@ -53,7 +53,7 @@ function MovingVehicle({ status }: { status: 'online' | 'offline' | 'unknown' })
 }
 
 export const EnMovimiento: Story = {
-  name: 'En movimiento (arrastra el mapa para probar Recentrar)',
+  name: 'En movimiento (arrastra el mapa: vuelve en la siguiente posición)',
   args: { device: makeDevice(), position: makePosition() },
   render: () => <MovingVehicle status="online" />,
 }

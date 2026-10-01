@@ -69,6 +69,11 @@
   color: var(--color-accent);
 }
 
+/* The trail the vehicle leaves behind: one line per leg, fading with age (opacity is set per leg in the hook). */
+.vehicle-trail {
+  stroke: var(--color-accent);
+}
+
 /* Marker: ring and halo carry the connection state, the arrow carries the heading (accent). */
 .vehicle-marker {
   --marker-color: var(--color-neutral);
@@ -109,36 +114,6 @@
   fill: var(--color-accent);
 }
 
-/* Appears only after the operator pans away. Bottom-left, above the attribution:
-   the status chip is top-left and the zoom buttons bottom-right, so nothing collides on a phone. */
-.vehicle-map__recenter {
-  position: absolute;
-  left: var(--space-4);
-  bottom: calc(var(--space-4) + 26px + var(--space-2));
-  z-index: 1000;
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  min-height: var(--tap-target);
-  padding: 0 var(--space-4);
-  background: var(--color-surface);
-  color: var(--color-text);
-  border: 1px solid var(--color-border-strong);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-sm);
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-semibold);
-  cursor: pointer;
-  transition:
-    color var(--duration-fast) var(--ease-standard),
-    border-color var(--duration-fast) var(--ease-standard);
-}
-
-.vehicle-map__recenter:hover {
-  color: var(--color-accent);
-  border-color: var(--color-accent);
-}
-
 /* Mobile: the map is small, so the zoom buttons shrink (36px, still above the 24px WCAG 2.2 minimum). */
 @media (max-width: 767px) {
   .vehicle-map .leaflet-bar {
@@ -154,26 +129,6 @@
 
   .vehicle-map .leaflet-right .leaflet-control {
     margin-right: var(--space-3);
-  }
-
-  /* Icon only on a phone (36px, same as the zoom buttons); the name stays for screen readers. */
-  .vehicle-map__recenter {
-    left: var(--space-3);
-    bottom: calc(var(--space-3) + 26px + var(--space-2));
-    width: 36px;
-    min-height: 36px;
-    padding: 0;
-    justify-content: center;
-    border-radius: 10px;
-  }
-
-  .vehicle-map__recenter-label {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
   }
 
   .vehicle-map .leaflet-bottom .leaflet-control {

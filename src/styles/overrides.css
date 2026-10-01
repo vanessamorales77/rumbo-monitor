@@ -40,6 +40,10 @@
   .vehicle-marker__halo {
     display: none;
   }
+
+  .vehicle-trail {
+    stroke: Highlight;
+  }
 }
 
 /* Print: a snapshot of the screen, without the controls and without the viewport-height layout. */
@@ -75,7 +79,6 @@
   .theme-toggle,
   .device-selector__chevron,
   .feed-overlay__action,
-  .vehicle-map__recenter,
   .vehicle-map .leaflet-control-zoom {
     display: none;
   }
