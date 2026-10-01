@@ -1,4 +1,5 @@
 .vehicle-map {
+  font-family: var(--font-sans);
   position: absolute;
   inset: 0;
   background: var(--color-surface-sunken);
@@ -27,7 +28,6 @@
   width: var(--tap-target);
   height: var(--tap-target);
   line-height: 1;
-  font-size: var(--font-size-control);
   background: var(--color-surface);
   color: var(--color-text-muted);
   border: var(--border-width) solid var(--color-border-strong);
@@ -39,6 +39,20 @@
 .vehicle-map .leaflet-bar a:hover {
   background: var(--color-surface);
   color: var(--color-accent);
+}
+
+/* Zoom buttons draw SVG icons (see the hook), so they follow the colour of the text and never use a glyph font. */
+.vehicle-map .leaflet-bar a {
+  font-family: inherit;
+}
+
+.vehicle-map .leaflet-bar a svg {
+  display: block;
+}
+
+.vehicle-map .leaflet-bar a.leaflet-disabled {
+  opacity: 0.45;
+  cursor: default;
 }
 
 /* The ring sits on top of map tiles of any colour: a halo in the surface colour gives it a known neighbour. */

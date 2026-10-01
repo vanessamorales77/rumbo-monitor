@@ -4,6 +4,11 @@ import type { DeviceStatus } from '../../api'
 import { prefersReducedMotion } from '../../utils/motion'
 
 const GLIDE_MS = 1_800
+
+const ICON = (path: string) =>
+  `<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path d="${path}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`
+const ZOOM_IN_ICON = ICON('M12 5v14M5 12h14')
+const ZOOM_OUT_ICON = ICON('M5 12h14')
 const DEFAULT_ZOOM = 15
 
 const SIZE = 56
@@ -158,7 +163,13 @@ export function useVehicleMarker({ containerRef, latitude, longitude, course, st
       doubleClickZoom: 'center',
       touchZoom: 'center',
     }).setView([4.711, -74.0721], 3)
-    const zoom = L.control.zoom({ position: 'bottomright', zoomInTitle: 'Acercar', zoomOutTitle: 'Alejar' }).addTo(map)
+    const zoom = L.control.zoom({
+      position: 'bottomright',
+      zoomInText: ZOOM_IN_ICON,
+      zoomOutText: ZOOM_OUT_ICON,
+      zoomInTitle: 'Acercar',
+      zoomOutTitle: 'Alejar',
+    }).addTo(map)
     // Leaflet draws the zoom buttons as <a role="button">, which only react to Enter. A button must also answer to Space.
     zoom.getContainer()?.addEventListener('keydown', (event) => {
       if (event.key !== ' ') return

@@ -45,6 +45,10 @@
   border-color: var(--color-accent);
 }
 
+.feed-status__detail {
+  color: var(--color-text-muted);
+}
+
 .feed-status__dot {
   flex: none;
   width: 10px;

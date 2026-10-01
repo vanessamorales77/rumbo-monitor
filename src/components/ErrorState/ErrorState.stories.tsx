@@ -21,11 +21,11 @@ type Story = StoryObj<typeof meta>
 
 export const SinRed: Story = {
   name: 'Sin red',
-  args: { kind: 'network' },
+  args: { kind: 'network', autoRetrySeconds: 15, onAutoRetry: fn() },
 }
 export const TiempoAgotado: Story = {
   name: 'Tiempo agotado',
-  args: { kind: 'timeout' },
+  args: { kind: 'timeout', autoRetrySeconds: 15, onAutoRetry: fn() },
 }
 export const Credenciales: Story = {
   name: 'Credenciales rechazadas',
@@ -34,4 +34,17 @@ export const Credenciales: Story = {
 export const ErrorDelServidor: Story = {
   name: 'Error del servidor',
   args: { kind: 'server' },
+}
+
+export const CuentaAtrasCorta: Story = {
+  name: 'Reintento automático (cuenta atrás de 6 s)',
+  args: { kind: 'network', autoRetrySeconds: 6, onAutoRetry: fn() },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'El mensaje se reintenta solo tras 15 s (30 y 60 s si sigue fallando) con una cuenta atrás visible, y se puede detener (WCAG 2.2.1). Con credenciales rechazadas no hay reintento automático: no se arreglan solas. Los reintentos automáticos no roban el foco; el primer error sí lo recibe.',
+      },
+    },
+  },
 }

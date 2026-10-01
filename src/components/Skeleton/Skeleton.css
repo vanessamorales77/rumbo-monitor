@@ -110,3 +110,18 @@
     transform: rotate(360deg);
   }
 }
+
+/* The status bar's footprint on stacked layouts: the speed is a numeral, not an arc. */
+@media (max-width: 767px), (min-width: 768px) and (orientation: portrait) {
+  /* The speed label is not drawn on stacked layouts, so neither is its skeleton. */
+  .status-card__row:first-child .skeleton--label {
+    display: none;
+  }
+
+  .skeleton--gauge {
+    width: 7rem;
+    max-width: none;
+    height: var(--font-size-display-compact);
+    margin: 0;
+  }
+}

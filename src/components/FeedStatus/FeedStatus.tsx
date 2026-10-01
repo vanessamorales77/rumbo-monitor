@@ -37,17 +37,19 @@ export function FeedStatus({ mode, onlineCount, totalCount, lastFix, demo, onEnt
   const stale = !demo && mode !== 'lost' && (quiet || noPositions || (lastFix !== null && isStale(lastFix, now)))
   const kind: Kind = demo ? 'demo' : stale ? 'stale' : mode
 
-  const text: Record<Kind, string> = {
-    live: 'En vivo',
-    polling: 'Actualizando cada 5 s',
-    lost: 'Sin conexión · datos desactualizados',
+  // Main message plus, when it helps, a quieter second one: two levels of text, not one string joined with a dot.
+  const text: Record<Kind, { main: string; detail?: string }> = {
+    live: { main: 'Datos en vivo' },
+    polling: { main: 'Actualizando cada 5 s' },
+    lost: { main: 'Sin conexión', detail: 'datos desactualizados' },
     stale: quiet
-      ? 'Ningún vehículo en línea'
+      ? { main: 'Ningún vehículo en línea' }
       : lastFix
-        ? `Sin datos nuevos · ${formatRelative(lastFix, now).toLowerCase()}`
-        : 'En línea, pero sin posiciones todavía',
-    demo: 'Modo demostración · datos simulados',
+        ? { main: 'Sin datos nuevos', detail: formatRelative(lastFix, now).toLowerCase() }
+        : { main: 'En línea, pero sin posiciones todavía' },
+    demo: { main: 'Modo demostración', detail: 'datos simulados' },
   }
+  const message = text[kind]
 
   // At most one action: look at simulated data when the real feed is unusable, or go back to the real one.
   const action =
@@ -61,7 +63,13 @@ export function FeedStatus({ mode, onlineCount, totalCount, lastFix, demo, onEnt
     <div className="feed-overlay">
       <p className={`feed-status feed-status--${kind}`} role="status">
         <span className="feed-status__dot" aria-hidden="true" />
-        {text[kind]}
+        <span>{message.main}</span>
+        {message.detail && (
+          <>
+            <span className="visually-hidden">, </span>
+            <span className="feed-status__detail">{message.detail}</span>
+          </>
+        )}
       </p>
       {(kind === 'live' || kind === 'polling') && (
         <FleetSummary className="feed-overlay__fleet" online={onlineCount} total={totalCount} />

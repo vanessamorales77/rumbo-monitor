@@ -28,6 +28,10 @@ export function useMonitor() {
   const [positions, setPositions] = useState<Record<number, Position>>({})
   const [selectedId, setSelectedId] = useState<number | null>(null)
   const [mode, setMode] = useState<FeedMode>('live')
+  /** Failed attempts in a row: the automatic retry waits longer each time instead of hammering a server that is down. */
+  const [failures, setFailures] = useState(0)
+  /** The last retry came from the timer, not from a click: the screen must not steal the focus again. */
+  const [retriedByTimer, setRetriedByTimer] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -50,10 +54,12 @@ export function useMonitor() {
         setPositions(Object.fromEntries(positionList.map((p) => [p.deviceId, p])))
         setSelectedId((current) => current ?? deviceList[0]?.id ?? null)
         setPhase('ready')
+        setFailures(0)
         unsubscribe = source.subscribe({ onDevice: upsertDevice, onPosition: upsertPosition, onMode: setMode })
       } catch (error) {
         if (cancelled) return
         setErrorKind(error instanceof TelemetryError ? error.kind : 'network')
+        setFailures((n) => n + 1)
         setPhase('error')
       }
     }
@@ -65,11 +71,18 @@ export function useMonitor() {
     }
   }, [source, attempt])
 
-  const retry = useCallback(() => {
+  const retryWith = useCallback((byTimer: boolean) => {
+    setRetriedByTimer(byTimer)
     setPhase('loading')
     setErrorKind(null)
     setAttempt((n) => n + 1)
   }, [])
+  const retry = useCallback(() => retryWith(false), [retryWith])
+  const retryAutomatically = useCallback(() => retryWith(true), [retryWith])
+
+  /** Seconds until the next automatic retry: 15, 30, then 60. Wrong credentials do not fix themselves, so no retry. */
+  const autoRetrySeconds =
+    phase === 'error' && errorKind !== null && errorKind !== 'auth' ? Math.min(60, 15 * 2 ** Math.max(0, failures - 1)) : null
 
   /** Start over with a different source: nothing from the previous one may linger on screen. */
   const switchSource = useCallback((demo: boolean) => {
@@ -79,6 +92,8 @@ export function useMonitor() {
     setPositions({})
     setSelectedId(null)
     setMode('live')
+    setFailures(0)
+    setRetriedByTimer(false)
     setDemoRequested(demo)
   }, [])
   const enterDemo = useCallback(() => switchSource(true), [switchSource])
@@ -109,6 +124,9 @@ export function useMonitor() {
     fleet,
     select: setSelectedId,
     retry,
+    retryAutomatically,
+    autoRetrySeconds,
+    retriedByTimer,
     /** Data on screen is simulated (by the user's choice, or because the whole build is a mock). */
     isDemo: demoRequested || isMockBuild,
     /** The user can switch between real and simulated data (not in a build that is simulated throughout). */

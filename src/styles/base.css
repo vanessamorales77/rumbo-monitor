@@ -85,3 +85,9 @@ select {
     opacity: 0;
   }
 }
+
+/* Theme change: the cross-fade of the whole page lasts as long as any other state change. */
+::view-transition-group(root) {
+  animation-duration: var(--duration-base);
+  animation-timing-function: var(--ease-standard);
+}

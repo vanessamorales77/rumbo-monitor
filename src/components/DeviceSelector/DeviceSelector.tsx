@@ -1,4 +1,5 @@
 import type { Device } from '../../api'
+import { vehicleLabel } from '../../utils/vehicleName'
 import './DeviceSelector.css'
 
 interface Props {
@@ -27,7 +28,7 @@ export function DeviceSelector({ devices, selectedId, onSelect, disabled, loadin
         {devices.length === 0 && <option value="">{loading ? 'Cargando vehículos…' : 'Sin datos'}</option>}
         {devices.map((device) => (
           <option key={device.id} value={device.id}>
-            {device.name}
+            {vehicleLabel(device.name)}
           </option>
         ))}
       </select>

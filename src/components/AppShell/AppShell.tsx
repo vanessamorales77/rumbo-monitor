@@ -49,6 +49,9 @@ export function AppShell() {
           <ErrorState
             kind={monitor.errorKind}
             onRetry={monitor.retry}
+            autoRetrySeconds={monitor.autoRetrySeconds}
+            onAutoRetry={monitor.retryAutomatically}
+            takeFocus={!monitor.retriedByTimer}
             onDemo={monitor.canToggleDemo ? monitor.enterDemo : undefined}
           />
         ) : (

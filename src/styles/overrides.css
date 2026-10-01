@@ -88,3 +88,18 @@
     box-shadow: none;
   }
 }
+
+@media (forced-colors: active) {
+  .error-state__halo {
+    display: none;
+  }
+
+  .error-state__ring {
+    fill: Canvas;
+    stroke: CanvasText;
+  }
+
+  .error-state__arrow {
+    fill: Highlight;
+  }
+}

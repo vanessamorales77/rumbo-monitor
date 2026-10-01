@@ -243,11 +243,12 @@
   }
 }
 
-/* Mobile: tighter card; the last-update row sits on one line when it fits. */
-@media (max-width: 767px) {
+/* Stacked layouts (phones, and tablets held upright): the card becomes a compact STATUS BAR above the map, so the
+   two things an operator must never have to scroll for (who, and how fast) are always on screen. The decorative arc
+   goes away: the numeral is the speed. Name and state on top; speed on the left, battery and age on the right. */
+@media (max-width: 767px), (min-width: 768px) and (orientation: portrait) {
   .status-card {
-    --gauge-height: 124px;
-    gap: var(--space-4);
+    gap: var(--space-3);
     padding: var(--space-4);
   }
 
@@ -256,19 +257,92 @@
   }
 
   .status-card__data {
-    gap: var(--space-4);
+    display: grid;
+    /* The speed column never takes more than 8rem (a long "Sin datos nuevos" wraps instead), so the right column keeps
+       room for "Última actualización" on one line. */
+    grid-template-columns: minmax(5.5rem, 8rem) minmax(0, 1fr);
+    column-gap: var(--space-4);
+    row-gap: var(--space-3);
+    align-items: center;
   }
 
+  /* "Velocidad" is already said by the numeral and its "km/h": the label stays for screen readers only. */
+  .status-card__row:first-child dt {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+  }
+
+  /* The clock would wrap above its text in the narrow right column; the words are enough here. */
+  .status-card__icon {
+    display: none;
+  }
+
+  .status-card__row:first-child {
+    grid-row: 1 / span 2;
+  }
+
+  .status-card__row:nth-child(2) {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .status-card__row:nth-child(3) {
+    grid-column: 2;
+    grid-row: 2;
+  }
+
+  /* No dividers between the rows: they are cells of one bar. */
   .status-card__row + .status-card__row {
-    padding-top: var(--space-4);
+    padding-top: 0;
+    border-top: 0;
+  }
+
+  .status-card__value--gauge {
+    display: block;
+    height: auto;
   }
 
   .speed-gauge {
-    max-width: 220px;
+    width: auto;
+    max-width: none;
+    height: auto;
+    margin: 0;
+  }
+
+  .speed-gauge__svg {
+    display: none;
+  }
+
+  .speed-gauge__value {
+    position: static;
+    display: block;
+  }
+
+  .speed-gauge__readout {
+    align-items: flex-start;
+    text-align: left;
   }
 
   .status-card__number {
     font-size: var(--font-size-display-compact);
+  }
+}
+
+/* Very narrow phones (320px): two columns would squeeze the battery bar and wrap the time, so the rows stack. */
+@media (max-width: 359px) {
+  .status-card__data {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .status-card__row:first-child,
+  .status-card__row:nth-child(2),
+  .status-card__row:nth-child(3) {
+    grid-row: auto;
+    grid-column: auto;
   }
 }
 

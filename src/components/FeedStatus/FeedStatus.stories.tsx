@@ -33,7 +33,7 @@ const meta = {
 export default meta
 type Story = StoryObj<typeof meta>
 
-export const EnVivo: Story = { name: 'En vivo', args: { mode: 'live' } }
+export const EnVivo: Story = { name: 'Datos en vivo', args: { mode: 'live' } }
 export const Polling: Story = { name: 'Polling', args: { mode: 'polling' } }
 export const SinDatosNuevos: Story = {
   name: 'Sin datos nuevos',
@@ -93,7 +93,7 @@ export const MovilEnVivo: Story = {
 }
 
 const feedStates: Array<{ label: string; args: NonNullable<Story['args']> }> = [
-  { label: 'En vivo', args: { mode: 'live' } },
+  { label: 'Datos en vivo', args: { mode: 'live' } },
   { label: 'Polling', args: { mode: 'polling' } },
   { label: 'Sin datos nuevos', args: { mode: 'live', lastFix: ago(6 * 3600) } },
   { label: 'Ningún vehículo en línea', args: { mode: 'live', onlineCount: 0, lastFix: null } },

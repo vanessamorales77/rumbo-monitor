@@ -21,8 +21,11 @@
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  font-size: var(--font-size-xl);
+  /* The same face as the speed numeral: the brand and the number operators watch share one voice. */
+  font-family: var(--font-display);
+  font-size: var(--font-size-brand);
   font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.01em;
   line-height: 28px;
 }
 
@@ -48,8 +51,8 @@
   }
 }
 
-/* Mobile: map on top, status card below in normal flow. Nothing overlaps the map,
-   so the marker is never hidden and the layout survives short screens (page scrolls). */
+/* Stacked: status bar on top, map below, in normal flow. Nothing overlaps the map, so the marker is never hidden,
+   and on a very short screen the page scrolls instead of squeezing anything. */
 .app-shell__main {
   flex: 1;
   min-height: 0;
@@ -60,26 +63,29 @@
   overflow-y: auto;
 }
 
-/* Mobile: the status strip sits ABOVE the map, in normal flow, so nothing covers the small map. */
+/* Stacked layouts: the status bar first, then the map, which takes whatever height is left (the page does not need
+   to scroll on a normal phone). The strip with the feed state sits right above the map, in normal flow. */
 .app-shell__stage {
   display: flex;
-  flex: 1 0 auto;
+  flex: 1 1 0;
   flex-direction: column;
   align-items: flex-start;
   gap: var(--space-3);
   min-width: 0;
+  min-height: 18rem;
 }
 
 .app-shell__map {
   position: relative;
-  flex: 1 0 auto;
+  flex: 1 1 0;
   align-self: stretch;
   min-width: 0;
-  min-height: max(45dvh, 260px);
+  min-height: 14rem;
 }
 
 .app-shell__panel {
   flex: none;
+  order: -1;
 }
 
 .app-shell__main > .error-state {
@@ -98,27 +104,34 @@
     padding: 0 var(--space-6);
   }
 
-  /* Two columns in a grid whose row is at least as tall as the card: the card is never clipped
-     (the page scrolls instead) and the map always matches the row height. */
   .app-shell__main {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) var(--panel-width);
-    grid-template-rows: minmax(min-content, 1fr);
-    gap: var(--space-5);
     padding: var(--space-5) var(--space-6);
-    overflow-y: auto;
   }
 
-  /* The stage is the grid cell; the map fills it and the status floats over it, top-left. */
+  /* The stage holds the map, which fills it; the feed state floats over the map, top-left. */
   .app-shell__stage {
     position: relative;
     display: block;
-    min-height: 0;
   }
 
   .app-shell__map {
     position: absolute;
     inset: 0;
+    min-height: 0;
+  }
+}
+
+/* Landscape (desktop, laptop, tablet on its side): two columns in a grid whose row is at least as tall as the card:
+   the card is never clipped (the page scrolls instead) and the map always matches the row height. */
+@media (min-width: 768px) and (orientation: landscape) {
+  .app-shell__main {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) var(--panel-width);
+    grid-template-rows: minmax(min-content, 1fr);
+    gap: var(--space-5);
+  }
+
+  .app-shell__stage {
     min-height: 0;
   }
 
@@ -127,6 +140,7 @@
   .app-shell__panel {
     display: flex;
     align-self: stretch;
+    order: 0;
   }
 
   .app-shell__panel > .status-card {
@@ -155,9 +169,21 @@
   }
 }
 
-/* Tablet: a slightly narrower card leaves more room for the map. */
-@media (min-width: 768px) and (max-width: 1023px) {
+/* Tablet on its side: a slightly narrower card leaves more room for the map. */
+@media (min-width: 768px) and (max-width: 1023px) and (orientation: landscape) {
   .app-shell__main {
     grid-template-columns: minmax(0, 1fr) 21rem;
+  }
+}
+
+/* Tablet held upright: the same stacked layout as a phone, with a map as tall as the screen allows. */
+@media (min-width: 768px) and (orientation: portrait) {
+  .app-shell__stage {
+    min-height: 26rem;
+  }
+
+  /* The status bar is as wide as the screen here; a battery bar that long would read as a progress bar. */
+  .app-shell__panel .battery-bar {
+    max-width: 18rem;
   }
 }

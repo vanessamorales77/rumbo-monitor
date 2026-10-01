@@ -16,11 +16,23 @@
 .error-state__icon {
   display: grid;
   place-items: center;
-  width: 56px;
-  height: 56px;
-  border-radius: var(--radius-full);
   color: var(--color-danger);
-  background: color-mix(in srgb, var(--color-danger) 16%, transparent);
+}
+
+.error-state__halo {
+  fill: currentColor;
+  opacity: 0.18;
+}
+
+.error-state__ring {
+  fill: var(--color-surface);
+  stroke: currentColor;
+  stroke-width: 4;
+  stroke-dasharray: 6.25 6.25;
+}
+
+.error-state__arrow {
+  fill: var(--color-text-muted);
 }
 
 .error-state__title {
@@ -75,4 +87,56 @@
   .error-state__secondary {
     align-self: stretch;
   }
+}
+
+/* Automatic retry: what is going to happen, when, and how to stop it. */
+.error-state__auto {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  margin-top: var(--space-2);
+}
+
+.error-state__countdown {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.error-state__track {
+  width: 100%;
+  height: var(--space-1);
+  border-radius: var(--radius-full);
+  background: var(--color-track);
+  overflow: hidden;
+}
+
+.error-state__progress {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--color-accent);
+  transform-origin: left;
+  animation: error-countdown linear forwards;
+}
+
+@keyframes error-countdown {
+  to {
+    transform: scaleX(0);
+  }
+}
+
+.error-state__link {
+  min-height: var(--tap-target);
+  padding: 0 var(--space-3);
+  background: none;
+  border: 0;
+  border-radius: var(--radius-sm);
+  color: var(--color-accent);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
 }

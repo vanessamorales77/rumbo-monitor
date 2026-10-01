@@ -141,3 +141,18 @@ export const CambioDeConexionEnVivo: Story = {
   args: { device: makeDevice(), position: makePosition() },
   render: () => <ConnectionFlipCard />,
 }
+
+/** En vertical (< 768 px, o tablet en vertical) la tarjeta es una barra compacta: arriba nombre, placa y estado; abajo la velocidad y, a su lado, batería y hora. */
+export const BarraCompactaMovil: Story = {
+  name: 'Móvil: barra de estado compacta',
+  args: { device: makeDevice(), position: makePosition({ speedKmh: 38, battery: 91 }) },
+  globals: { viewport: { value: 'mobile1', isRotated: false } },
+  parameters: { layout: 'fullscreen', fullWidth: true },
+  decorators: [
+    (Story) => (
+      <div style={{ padding: '1rem', boxSizing: 'border-box' }}>
+        <Story />
+      </div>
+    ),
+  ],
+}
