@@ -10,6 +10,7 @@ import { AnimatedValue } from './AnimatedValue'
 import { BatteryBar } from './BatteryBar'
 import { FadeText } from './FadeText'
 import { SpeedGauge } from './SpeedGauge'
+import { SpeedReadout } from './SpeedReadout'
 import './StatusCard.css'
 
 const LOW_BATTERY = 20
@@ -48,22 +49,7 @@ export function StatusCard({ device, position }: Props) {
           <dt>Velocidad</dt>
           <dd className="status-card__value status-card__value--gauge">
             <SpeedGauge value={shownSpeed ?? 0}>
-              <span className="speed-gauge__readout">
-                {speed === null ? (
-                  <>
-                    <span className="speed-gauge__headline">{noDataLabel}</span>
-                    {lastSpeed !== null && <span className="speed-gauge__note">Última: {lastSpeed} km/h</span>}
-                  </>
-                ) : (
-                  <>
-                    <AnimatedValue value={speed}>
-                      <span className="status-card__number">{Math.round(shownSpeed ?? speed)}</span>
-                      <span className="status-card__unit">km/h</span>
-                    </AnimatedValue>
-                    {speed === 0 && <span className="speed-gauge__note">Detenido</span>}
-                  </>
-                )}
-              </span>
+              <SpeedReadout speed={speed} shown={shownSpeed} lastSpeed={lastSpeed} noDataLabel={noDataLabel} />
             </SpeedGauge>
           </dd>
         </div>

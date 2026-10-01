@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { CardSkeleton, MapSkeleton } from './Skeleton'
+import { CardSkeleton, FeedSkeleton, MapSkeleton } from './Skeleton'
 
 const meta = {
   title: 'Componentes/Carga (skeleton)',
@@ -30,6 +30,28 @@ export const Mapa: Story = {
   render: () => (
     <div style={{ position: 'relative', width: '32rem', height: '20rem' }}>
       <MapSkeleton />
+    </div>
+  ),
+}
+
+export const FranjaDeEstado: Story = {
+  name: 'Franja de estado (móvil)',
+  globals: { viewport: { value: 'mobile1', isRotated: false } },
+  parameters: {
+    layout: 'fullscreen',
+    docs: {
+      description: {
+        story:
+          'Solo se ve en móvil: reserva el hueco de una línea que ocupa el estado del flujo encima del mapa, para que no empuje el contenido al cargar. En tablet y escritorio ese estado flota sobre el mapa y no se reserva nada.',
+      },
+    },
+  },
+  render: () => (
+    <div style={{ width: '100%', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+      <FeedSkeleton />
+      <div style={{ position: 'relative', height: '12rem' }}>
+        <MapSkeleton />
+      </div>
     </div>
   ),
 }

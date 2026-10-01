@@ -10,7 +10,7 @@ const meta = {
     docs: {
       description: {
         component:
-          'Mensaje empático con botón de reintento. Al aparecer, el foco pasa al título y el contenedor usa `role="alert"`.',
+          'Mensaje empático con botón de reintento. Al aparecer, el foco pasa al título, que se describe con el texto del cuerpo (`aria-describedby`): se lee una sola vez. No usa `role="alert"` porque anunciaría el mensaje por duplicado.',
       },
     },
   },

@@ -36,3 +36,45 @@ export const SinDatosNuevos: Story = {
 }
 export const Perdido: Story = { name: 'Sin conexión', args: { mode: 'lost' } }
 export const Demostracion: Story = { name: 'Modo demostración', args: { demo: true } }
+
+/** On a phone the status sits in a strip ABOVE the map, so nothing covers the small map. */
+const mobileStory = (args: Story['args'], note: string): Story => ({
+  args,
+  globals: { viewport: { value: 'mobile1', isRotated: false } },
+  parameters: { layout: 'fullscreen', docs: { description: { story: note } } },
+  decorators: [
+    () => (
+      <div style={{ width: '100%', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+        <FeedStatus {...(meta.args as Required<NonNullable<Story['args']>>)} {...args} />
+        <div
+          style={{
+            height: '10rem',
+            display: 'grid',
+            placeItems: 'center',
+            borderRadius: 16,
+            border: '1px dashed var(--color-border-strong)',
+            color: 'var(--color-text-muted)',
+          }}
+        >
+          Mapa
+        </div>
+      </div>
+    ),
+  ],
+})
+
+const MOBILE_NOTE =
+  'En móvil (< 768 px) el estado y su botón pasan a una franja encima del mapa, en el flujo de la página. El botón es un enlace subrayado de 32 px que baja de línea si el texto es largo.'
+
+export const MovilSinDatosNuevos: Story = {
+  name: 'Móvil: sin datos nuevos',
+  ...mobileStory({ mode: 'live', lastFix: ago(6 * 3600) }, MOBILE_NOTE),
+}
+export const MovilDemostracion: Story = {
+  name: 'Móvil: modo demostración',
+  ...mobileStory({ demo: true }, MOBILE_NOTE),
+}
+export const MovilEnVivo: Story = {
+  name: 'Móvil: en vivo',
+  ...mobileStory({ mode: 'live' }, MOBILE_NOTE),
+}

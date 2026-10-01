@@ -17,13 +17,22 @@ interface PositionOptions {
   course?: number
   /** How long ago the fix was taken. */
   ageSeconds?: number
+  latitude?: number
+  longitude?: number
 }
 
-export const makePosition = ({ speedKmh = 34, battery = 79, course = 45, ageSeconds = 3 }: PositionOptions = {}): Position => ({
+export const makePosition = ({
+  speedKmh = 34,
+  battery = 79,
+  course = 45,
+  ageSeconds = 3,
+  latitude = 4.711,
+  longitude = -74.0721,
+}: PositionOptions = {}): Position => ({
   id: 1,
   deviceId: 1,
-  latitude: 4.711,
-  longitude: -74.0721,
+  latitude,
+  longitude,
   speed: speedKmh / KNOTS_TO_KMH,
   course,
   fixTime: new Date(Date.now() - ageSeconds * 1000).toISOString(),
