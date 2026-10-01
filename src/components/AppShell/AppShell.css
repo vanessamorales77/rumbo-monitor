@@ -13,8 +13,8 @@
   height: var(--header-height);
   padding: 0 var(--space-4);
   background: var(--color-surface);
-  border-bottom: 1px solid var(--color-border);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  border-bottom: var(--border-width) solid var(--color-border);
+  box-shadow: var(--shadow-bar);
 }
 
 .app-shell__brand {
@@ -122,7 +122,8 @@
     min-height: 0;
   }
 
-  /* Map and card always share exactly the same height; the card spreads its rows evenly. */
+  /* Map and card always share exactly the same height. The spare height goes to the speed (the hero of the card),
+     which sits centred in it, instead of opening gaps between the small rows below. */
   .app-shell__panel {
     display: flex;
     align-self: stretch;
@@ -134,7 +135,18 @@
 
   .app-shell__panel .status-card__data {
     flex: 1;
-    justify-content: space-between;
+  }
+
+  .app-shell__panel .status-card__row:first-child {
+    flex: 1;
+  }
+
+  .app-shell__panel .status-card__value--gauge {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    height: auto;
+    min-height: var(--gauge-height);
   }
 
   .app-shell__main > .error-state {

@@ -3,7 +3,7 @@
   border-radius: var(--radius-sm);
   background: linear-gradient(90deg, var(--skeleton-base) 25%, var(--skeleton-shine) 50%, var(--skeleton-base) 75%);
   background-size: 200% 100%;
-  animation: skeleton-shimmer 1.6s linear infinite;
+  animation: skeleton-shimmer var(--duration-shimmer) linear infinite;
 }
 
 @keyframes skeleton-shimmer {
@@ -36,7 +36,7 @@
 .skeleton--plate {
   width: 5.5rem;
   height: 28px;
-  border-radius: 6px;
+  border-radius: var(--radius-chip);
 }
 
 .skeleton--pill {
@@ -52,9 +52,10 @@
 
 .skeleton--gauge {
   width: 100%;
-  max-width: 260px;
+  max-width: calc(var(--gauge-height) * 1.76);
   height: var(--gauge-height);
-  margin: 0 auto;
+  /* Auto margins centre it in whatever height the row gets, like the real gauge does. */
+  margin: auto;
   border-radius: var(--radius-lg);
 }
 
@@ -67,14 +68,14 @@
   position: absolute;
   inset: 0;
   /* Above the Leaflet panes: the same cover is kept over the map until its tiles have loaded. */
-  z-index: 1100;
+  z-index: var(--z-cover);
   border-radius: var(--radius-lg);
 }
 
 .skeleton--leaving {
   opacity: 0;
   pointer-events: none;
-  transition: opacity 300ms var(--ease-standard);
+  transition: opacity var(--duration-base) var(--ease-standard);
 }
 
 .skeleton-map__pill {
@@ -90,7 +91,7 @@
   font-size: var(--font-size-sm);
   color: var(--color-text);
   background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius-full);
   box-shadow: var(--shadow-sm);
 }
@@ -98,10 +99,10 @@
 .skeleton-map__spinner {
   width: 14px;
   height: 14px;
-  border: 2px solid var(--color-border-strong);
+  border: var(--border-width-strong) solid var(--color-border-strong);
   border-top-color: var(--color-accent);
   border-radius: var(--radius-full);
-  animation: skeleton-spin 0.9s linear infinite;
+  animation: skeleton-spin var(--duration-spin) linear infinite;
 }
 
 @keyframes skeleton-spin {

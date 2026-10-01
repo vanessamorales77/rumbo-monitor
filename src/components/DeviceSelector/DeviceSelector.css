@@ -12,10 +12,10 @@
   min-width: 0;
   width: 100%;
   text-overflow: ellipsis;
-  padding: 0 calc(var(--space-3) * 2 + 12px) 0 var(--space-3);
+  padding: 0 calc(var(--space-3) * 3) 0 var(--space-3);
   background: var(--color-surface);
   color: var(--color-text);
-  border: 1px solid var(--color-border-strong);
+  border: var(--border-width) solid var(--color-border-strong);
   border-radius: var(--radius-md);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
@@ -34,11 +34,12 @@
 .device-selector__chevron {
   position: absolute;
   right: var(--space-3);
-  width: 8px;
-  height: 8px;
-  margin-top: -3px;
-  border-right: 2px solid var(--color-text-muted);
-  border-bottom: 2px solid var(--color-text-muted);
+  --chevron-size: 0.5rem;
+  width: var(--chevron-size);
+  height: var(--chevron-size);
+  margin-top: calc(var(--chevron-size) * -0.375);
+  border-right: var(--border-width-strong) solid var(--color-text-muted);
+  border-bottom: var(--border-width-strong) solid var(--color-text-muted);
   transform: rotate(45deg);
   pointer-events: none;
 }

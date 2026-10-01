@@ -34,6 +34,9 @@ export function StatusCard({ device, position }: Props) {
   const battery = position?.attributes.batteryLevel ?? null
   const batteryLow = battery !== null && battery <= LOW_BATTERY
   const shownSpeed = useTweenedNumber(speed)
+  // Only the arc passes through 0 when the speed becomes (un)known, so it empties and fills smoothly. The number never
+  // does: a missing speed is not zero, and a flash of "0 km/h" would say so.
+  const arcSpeed = useTweenedNumber(speed ?? 0)
   const shownBattery = useTweenedNumber(battery)
   const announcement = useAnnouncement(device, speed, batteryLow)
 
@@ -66,7 +69,7 @@ export function StatusCard({ device, position }: Props) {
         <div className="status-card__row">
           <dt>Velocidad</dt>
           <dd className="status-card__value status-card__value--gauge">
-            <SpeedGauge value={shownSpeed ?? 0}>
+            <SpeedGauge value={arcSpeed ?? 0}>
               <SpeedReadout speed={speed} shown={shownSpeed} lastSpeed={lastSpeed} noDataLabel={noDataLabel} />
             </SpeedGauge>
           </dd>

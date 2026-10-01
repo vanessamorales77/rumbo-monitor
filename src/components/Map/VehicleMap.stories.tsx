@@ -59,8 +59,13 @@ export const EnMovimiento: Story = {
 }
 
 export const SinConexion: Story = {
-  name: 'Vehículo sin conexión',
+  name: 'Vehículo sin conexión (aro discontinuo)',
   args: { device: makeDevice({ status: 'offline' }), position: makePosition({ speedKmh: 34, ageSeconds: 3600 }) },
+}
+
+export const Desconocido: Story = {
+  name: 'Estado desconocido (aro punteado)',
+  args: { device: makeDevice({ status: 'unknown' }), position: makePosition({ speedKmh: 0, ageSeconds: 7200 }) },
 }
 
 export const SinPosicion: Story = {

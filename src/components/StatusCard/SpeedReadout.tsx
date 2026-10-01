@@ -14,7 +14,7 @@ interface Props {
 /** The text in the middle of the speed gauge. A missing speed is never shown as 0: the vehicle may still be moving. */
 export function SpeedReadout({ speed, shown, lastSpeed, noDataLabel }: Props) {
   return (
-    <span className="speed-gauge__readout">
+    <span key={speed === null ? 'no-data' : 'speed'} className="speed-gauge__readout">
       {speed === null ? (
         <>
           <span className="speed-gauge__headline">{noDataLabel}</span>

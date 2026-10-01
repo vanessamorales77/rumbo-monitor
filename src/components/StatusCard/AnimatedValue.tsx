@@ -1,5 +1,6 @@
 import { useEffect, useRef, type ReactNode } from 'react'
 import { prefersReducedMotion } from '../../utils/motion'
+import './AnimatedValue.css'
 
 interface Props {
   /** When this changes, the value gets a soft highlight. Children are never remounted. */

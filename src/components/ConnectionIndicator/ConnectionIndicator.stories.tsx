@@ -1,4 +1,6 @@
+import { useEffect, useState } from 'react'
 import type { Meta, StoryObj } from '@storybook/react-vite'
+import type { DeviceStatus } from '../../api'
 import { ConnectionIndicator } from './ConnectionIndicator'
 
 const meta = {
@@ -39,4 +41,22 @@ export const Todos: Story = {
       <ConnectionIndicator status="unknown" />
     </div>
   ),
+}
+
+const CYCLE: DeviceStatus[] = ['online', 'offline', 'unknown']
+
+function Cycling() {
+  const [step, setStep] = useState(0)
+  useEffect(() => {
+    const timer = setInterval(() => setStep((n) => n + 1), 2_500)
+    return () => clearInterval(timer)
+  }, [])
+  return <ConnectionIndicator status={CYCLE[step % CYCLE.length]} />
+}
+
+/** El estado cambia solo cada 2,5 s: el color se transiciona, el texto se funde y se resalta suavemente. */
+export const CambioEnVivo: Story = {
+  name: 'Cambio de estado en vivo',
+  args: { status: 'online' },
+  render: () => <Cycling />,
 }

@@ -4,8 +4,8 @@
   align-items: center;
   height: 28px;
   padding: 0 var(--space-2);
-  border: 1.5px solid var(--plate-border);
-  border-radius: 6px;
+  border: var(--border-width-strong) solid var(--plate-border);
+  border-radius: var(--radius-chip);
   background: var(--plate-bg);
   color: var(--plate-text);
   font-size: var(--font-size-sm);

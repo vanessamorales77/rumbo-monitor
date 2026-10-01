@@ -5,7 +5,7 @@
   height: var(--tap-target);
   background: var(--color-surface);
   color: var(--color-text);
-  border: 1px solid var(--color-border-strong);
+  border: var(--border-width) solid var(--color-border-strong);
   border-radius: var(--radius-md);
   cursor: pointer;
   transition:

@@ -2,7 +2,7 @@
   position: absolute;
   inset: 0;
   background: var(--color-surface-sunken);
-  border: 1px solid var(--color-border);
+  border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius-lg);
   overflow: hidden;
 }
@@ -27,10 +27,10 @@
   width: var(--tap-target);
   height: var(--tap-target);
   line-height: 1;
-  font-size: 22px;
+  font-size: var(--font-size-control);
   background: var(--color-surface);
   color: var(--color-text-muted);
-  border: 1px solid var(--color-border-strong);
+  border: var(--border-width) solid var(--color-border-strong);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-sm);
   transition: color var(--duration-fast) var(--ease-standard);
@@ -118,6 +118,17 @@
   transition: stroke var(--duration-base) var(--ease-standard);
 }
 
+/* The state is also in the SHAPE of the ring, so it does not depend on telling green from amber from grey:
+   continuous = online, dashed = offline, dotted = unknown. (pathLength="100": the numbers are percentages of the ring.) */
+.vehicle-marker--offline .vehicle-marker__disc {
+  stroke-dasharray: 6.25 6.25;
+}
+
+.vehicle-marker--unknown .vehicle-marker__disc {
+  stroke-dasharray: 0.01 5;
+  stroke-linecap: round;
+}
+
 .vehicle-marker__arrow {
   fill: var(--color-accent);
 }
@@ -133,8 +144,8 @@
   .vehicle-map.leaflet-touch .leaflet-bar a:last-child {
     width: 36px;
     height: 36px;
-    font-size: 18px;
-    border-radius: 10px;
+    font-size: var(--font-size-lg);
+    border-radius: var(--radius-md);
   }
 
   .vehicle-map .leaflet-right .leaflet-control {

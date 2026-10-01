@@ -1,0 +1,5 @@
+/* The highlight animation lives in AnimatedValue (Web Animations API); this only shapes the element. */
+.animated-value {
+  display: inline-block;
+  border-radius: var(--radius-sm);
+}

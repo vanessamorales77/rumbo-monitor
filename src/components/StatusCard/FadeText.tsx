@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { prefersReducedMotion } from '../../utils/motion'
+import './FadeText.css'
 
 /** Text that crossfades (with a 3px drift) whenever its content changes. */
 export function FadeText({ text }: { text: string }) {

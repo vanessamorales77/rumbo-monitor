@@ -8,7 +8,7 @@
   gap: var(--space-5);
   padding: var(--space-5);
   background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius-xl);
   box-shadow: var(--shadow-sm);
 }
@@ -19,7 +19,7 @@
   align-items: flex-start;
   gap: var(--space-2);
   padding-bottom: var(--space-4);
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: var(--border-width) solid var(--color-border);
 }
 
 /* Plate and connection state share one row; both are 28px tall, like their skeletons. */
@@ -31,7 +31,7 @@
 }
 
 .status-card__title {
-  font-size: var(--font-size-lg);
+  font-size: var(--font-size-xl);
   font-weight: var(--font-weight-semibold);
   line-height: 28px;
 }
@@ -50,7 +50,7 @@
 
 .status-card__row + .status-card__row {
   padding-top: var(--space-5);
-  border-top: 1px solid var(--color-border);
+  border-top: var(--border-width) solid var(--color-border);
 }
 
 .status-card__row dt {
@@ -93,6 +93,7 @@
 }
 
 .status-card__hint {
+  animation: fade-in var(--duration-base) var(--ease-standard);
   flex-basis: 100%;
   font-size: var(--font-size-sm);
 }
@@ -120,8 +121,9 @@
 .speed-gauge {
   position: relative;
   width: 100%;
-  max-width: 260px;
-  height: 100%;
+  /* The arc's aspect ratio (240:132) times its height. */
+  max-width: calc(var(--gauge-height) * 1.76);
+  height: var(--gauge-height);
   margin: 0 auto;
 }
 
@@ -154,6 +156,7 @@
 }
 
 .speed-gauge__readout {
+  animation: fade-in var(--duration-base) var(--ease-standard);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -167,6 +170,7 @@
 }
 
 .speed-gauge__note {
+  animation: fade-in var(--duration-base) var(--ease-standard);
   font-size: var(--font-size-sm);
   color: var(--color-text-muted);
 }
@@ -181,14 +185,14 @@
 .battery-bar {
   display: flex;
   flex: 1;
-  gap: 3px;
+  gap: var(--space-1);
   min-width: 0;
 }
 
 .battery-bar__segment {
   flex: 1;
   height: 10px;
-  border-radius: 3px;
+  border-radius: var(--radius-xs);
   background: var(--color-track);
   transition: background-color var(--duration-base) var(--ease-standard);
 }
@@ -201,22 +205,13 @@
   background: var(--color-danger);
 }
 
-/* Highlight animation lives in AnimatedValue (Web Animations API); this only shapes it. */
-.animated-value {
-  display: inline-block;
-  border-radius: var(--radius-sm);
-}
-
-.fade-text {
-  display: inline-block;
-}
-
 /* Short screens (desktop/tablet): the card shrinks to fit the viewport so nothing needs scrolling.
    The gauge scales with the window height and spacing tightens. Nothing is ever hidden:
    on extremely short screens the page scrolls instead. */
 @media (min-width: 768px) {
   .status-card {
-    --gauge-height: clamp(96px, 21dvh, 148px);
+    /* Grows with the window height (the card is as tall as the map), up to what fits the card's width. */
+    --gauge-height: clamp(96px, 21dvh, 170px);
   }
 }
 
@@ -244,7 +239,7 @@
   }
 
   .status-card__number {
-    font-size: 3.5rem;
+    font-size: var(--font-size-display-compact);
   }
 }
 
@@ -273,17 +268,11 @@
   }
 
   .status-card__number {
-    font-size: 3.5rem;
+    font-size: var(--font-size-display-compact);
   }
 }
 
 /* The real card fades in over its skeleton's footprint (same size, so nothing moves). */
 .status-card--enter {
-  animation: status-card-in 250ms var(--ease-standard);
-}
-
-@keyframes status-card-in {
-  from {
-    opacity: 0;
-  }
+  animation: fade-in var(--duration-base) var(--ease-standard);
 }

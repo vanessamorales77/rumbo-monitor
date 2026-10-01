@@ -38,7 +38,7 @@
   inset: 0;
   border-radius: inherit;
   background: var(--status-color);
-  animation: connection-pulse 2s var(--ease-standard) infinite;
+  animation: connection-pulse var(--duration-pulse) var(--ease-standard) infinite;
 }
 
 @keyframes connection-pulse {

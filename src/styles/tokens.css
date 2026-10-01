@@ -11,6 +11,10 @@
   --font-size-lg: 1.125rem;
   --font-size-xl: 1.25rem;
   --font-size-display: 4.5rem;
+  /* The same numeral on short screens and phones. */
+  --font-size-display-compact: 3.5rem;
+  /* Glyph of the map's zoom buttons. */
+  --font-size-control: 1.375rem;
   --font-weight-regular: 400;
   --font-weight-medium: 500;
   --font-weight-semibold: 600;
@@ -26,7 +30,13 @@
   --space-6: 2rem;
   --space-7: 3rem;
 
+  /* Borders */
+  --border-width: 1px;
+  --border-width-strong: 2px;
+
   /* Radius */
+  --radius-xs: 4px;
+  --radius-chip: 6px;
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
@@ -37,12 +47,21 @@
   --duration-fast: 150ms;
   --duration-base: 250ms;
   --duration-slow: 600ms;
+  /* Looping decorations */
+  --duration-pulse: 2s;
+  --duration-shimmer: 1.6s;
+  --duration-spin: 0.9s;
   --ease-standard: cubic-bezier(0.2, 0, 0, 1);
 
   /* Licence plate chip (same in both themes: it imitates the real plate) */
   --plate-bg: #f7cf2e;
   --plate-text: #1b1b1b;
   --plate-border: #1b1b1b;
+
+  /* Stacking: above the map panes (Leaflet goes up to 800), cover over everything on the map, skip link on top. */
+  --z-overlay: 1000;
+  --z-cover: 1100;
+  --z-skip: 2000;
 
   /* Layout */
   --header-height: 64px;

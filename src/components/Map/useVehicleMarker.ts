@@ -12,7 +12,7 @@ const markerHtml = `
 <div class="vehicle-marker__rotor">
   <svg viewBox="0 0 56 56" width="${SIZE}" height="${SIZE}" aria-hidden="true" focusable="false">
     <circle class="vehicle-marker__halo" cx="28" cy="28" r="26" />
-    <circle class="vehicle-marker__disc" cx="28" cy="28" r="17" />
+    <circle class="vehicle-marker__disc" cx="28" cy="28" r="17" pathLength="100" />
     <path class="vehicle-marker__arrow" d="M28 14 L37 39 L28 33 L19 39 Z" />
   </svg>
 </div>`

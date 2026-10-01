@@ -124,3 +124,20 @@ export const ClaroYOscuro: Story = {
     </div>
   ),
 }
+
+function ConnectionFlipCard() {
+  const [online, setOnline] = useState(true)
+  useEffect(() => {
+    const timer = setInterval(() => setOnline((value) => !value), 3_500)
+    return () => clearInterval(timer)
+  }, [])
+  const device = makeDevice({ status: online ? 'online' : 'offline' })
+  return <StatusCard device={device} position={makePosition({ speedKmh: 34, battery: 79, ageSeconds: online ? 0 : 5 * 60 })} />
+}
+
+/** La conexión alterna cada 3,5 s: cambian a la vez el indicador (color, fundido y realce) y la velocidad (número ↔ "Sin señal"), con el arco vaciándose o llenándose. */
+export const CambioDeConexionEnVivo: Story = {
+  name: 'Cambio de conexión en vivo',
+  args: { device: makeDevice(), position: makePosition() },
+  render: () => <ConnectionFlipCard />,
+}

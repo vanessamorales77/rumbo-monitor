@@ -8,8 +8,8 @@ import { MapSkeleton } from '../Skeleton/Skeleton'
 import { useVehicleMarker } from './useVehicleMarker'
 import './VehicleMap.css'
 
-/** Must match the fade-out duration of `.skeleton--leaving`. */
-const COVER_FADE_MS = 350
+/** A little longer than the fade-out of `.skeleton--leaving` (--duration-base, 250 ms). */
+const COVER_FADE_MS = 300
 
 interface Props {
   device: Device | null
