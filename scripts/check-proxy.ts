@@ -7,7 +7,9 @@
  * Needs Node 22.18+ (runs TypeScript natively).
  */
 
-export {} // a module, so top-level await and these names stay local to the file
+import { randomBytes } from 'node:crypto'
+import http from 'node:http'
+import https from 'node:https'
 
 const [workerArg, appArg] = process.argv.slice(2)
 if (!workerArg || !appArg) {
@@ -53,29 +55,55 @@ const users = await get('/api/users')
 check(users.status === 404, 'no expone otras rutas de Traccar (/api/users)', `HTTP ${users.status}`)
 
 // WebSocket: the handshake must succeed for the app, and be refused for a foreign origin.
-const openSocket = (origin: string | null) =>
-  new Promise<{ opened: boolean; messages: number }>((resolve) => {
-    const url = worker.replace(/^http/, 'ws') + '/api/socket'
-    const socket = new WebSocket(url, origin ? ({ headers: { Origin: origin } } as never) : undefined)
-    let messages = 0
-    const done = (opened: boolean) => {
+// Done by hand over HTTPS (instead of `new WebSocket`) so a refusal comes with its status and the Worker's message.
+interface Handshake {
+  upgraded: boolean
+  status: number | null
+  body: string
+  bytes: number
+}
+const handshake = (origin: string | null) =>
+  new Promise<Handshake>((resolve) => {
+    const target = new URL(worker)
+    const request = (target.protocol === 'http:' ? http : https).request({
+      hostname: target.hostname,
+      port: target.port || undefined,
+      path: '/api/socket',
+      headers: {
+        Connection: 'Upgrade',
+        Upgrade: 'websocket',
+        'Sec-WebSocket-Version': '13',
+        'Sec-WebSocket-Key': randomBytes(16).toString('base64'),
+        ...(origin ? { Origin: origin } : {}),
+      },
+    })
+    const result: Handshake = { upgraded: false, status: null, body: '', bytes: 0 }
+    const done = () => {
       clearTimeout(timer)
-      try {
-        socket.close()
-      } catch {
-        /* already closed */
-      }
-      resolve({ opened, messages })
+      request.destroy()
+      resolve(result)
     }
-    const timer = setTimeout(() => done(false), 8_000)
-    socket.addEventListener('open', () => setTimeout(() => done(true), 2_500))
-    socket.addEventListener('message', () => (messages += 1))
-    socket.addEventListener('error', () => done(false))
+    const timer = setTimeout(done, 8_000)
+    request.on('upgrade', (response, socket) => {
+      result.upgraded = true
+      result.status = response.statusCode ?? null
+      socket.on('data', (chunk) => (result.bytes += chunk.length))
+      setTimeout(done, 2_500) // listen a moment: messages arrive when Traccar has news
+    })
+    request.on('response', (response) => {
+      result.status = response.statusCode ?? null
+      response.on('data', (chunk) => (result.body += chunk.toString()))
+      response.on('end', done)
+    })
+    request.on('error', done)
+    request.end()
   })
-const good = await openSocket(app)
-check(good.opened, 'WebSocket: el apretón de manos funciona', `${good.messages} mensaje(s) en 2,5 s (llegan cuando hay posiciones nuevas)`)
-const bad = await openSocket(EVIL)
-check(!bad.opened, 'WebSocket: rechaza un origen ajeno')
+
+const good = await handshake(app)
+const why2 = good.upgraded ? '' : ` — HTTP ${good.status ?? 'sin respuesta'} ${good.body.slice(0, 220)}`
+check(good.upgraded, 'WebSocket: el apretón de manos funciona', good.upgraded ? `101, ${good.bytes} byte(s) recibidos en 2,5 s (llegan cuando hay posiciones nuevas)` : why2.trim())
+const bad = await handshake(EVIL)
+check(!bad.upgraded, 'WebSocket: rechaza un origen ajeno', bad.upgraded ? 'se abrió (mal)' : `HTTP ${bad.status}`)
 
 console.log(failed === 0 ? '\nTodo en orden.' : `\n${failed} comprobación(es) fallaron.`)
 process.exit(failed === 0 ? 0 : 1)

@@ -8,7 +8,8 @@
  * How it authenticates against Traccar: REST calls carry the account as HTTP Basic credentials on every request, so they
  * do not depend on a session surviving between two requests (Cloudflare may send them from different IP addresses, and
  * the demo servers did not recognise the cookie from one to the next). The WebSocket, which Traccar ties to a session,
- * gets a session cookie from a fresh sign-in (plus the Basic header, in case the server honours it).
+ * first tries an access token (made with the Basic credentials and sent as ?token=, so it needs no session either) and
+ * then a session cookie from a fresh sign-in. When neither opens it, the answer says what each attempt got.
  *
  * It is deliberately NOT an open proxy. It signs in as the demo account, so it only forwards the four calls the app
  * makes; anything else (creating or deleting devices, reading users…) is refused.
@@ -40,10 +41,18 @@ const ROUTES = [
 let sessionCookie: string | null = null
 let signingIn: Promise<string> | null = null
 
-/** For tests: forget the session. */
+/** A Traccar access token for the WebSocket, made once and reused. */
+let socketToken: { value: string; until: number } | null = null
+let requestingToken: Promise<string | null> | null = null
+/** How long a token is reused. Traccar is asked for one that lasts twice as long, so a cached one never expires mid-use. */
+const TOKEN_REUSE_MS = 6 * 60 * 60 * 1000
+
+/** For tests: forget the session and the token. */
 export function resetSession() {
   sessionCookie = null
   signingIn = null
+  socketToken = null
+  requestingToken = null
 }
 
 const upstreamOf = (env: Env) => (env.TRACCAR_URL || DEFAULT_UPSTREAM).replace(/\/+$/, '')
@@ -88,9 +97,6 @@ function collectCookies(headers: Headers): string | null {
   return pairs.length > 0 ? pairs.join('; ') : null
 }
 
-/** Cookie names only (never values): safe to show when explaining what went wrong. */
-const cookieNames = (cookie: string | null) => (cookie ? cookie.split(';').map((pair) => pair.split('=')[0].trim()) : [])
-
 /** Signs in to Traccar with the configured account. Returns the upstream response and the cookie it granted, if any. */
 async function signIn(env: Env): Promise<{ response: Response; cookie: string | null }> {
   const response = await fetch(`${upstreamOf(env)}/api/session`, {
@@ -115,18 +121,50 @@ async function cookieFor(env: Env, renew = false): Promise<string | null> {
   return (await signingIn) || null
 }
 
+/** Asks Traccar for an access token with the account's Basic credentials. `null` when the server does not give one. */
+async function requestToken(env: Env): Promise<string | null> {
+  const expiration = new Date(Date.now() + 2 * TOKEN_REUSE_MS).toISOString()
+  const response = await fetch(`${upstreamOf(env)}/api/session/token`, {
+    method: 'POST',
+    headers: {
+      Authorization: basicAuth(env),
+      'Content-Type': 'application/x-www-form-urlencoded',
+      Accept: 'text/plain, application/json',
+      Origin: new URL(upstreamOf(env)).origin,
+    },
+    body: new URLSearchParams({ expiration }),
+  })
+  if (!response.ok) return null
+  const value = (await response.text()).trim().replace(/^"|"$/g, '')
+  if (!value) return null
+  socketToken = { value, until: Date.now() + TOKEN_REUSE_MS }
+  return value
+}
+
+/** The token to use, requesting one if there is none (or if the last one was refused). Concurrent callers share one request. */
+async function tokenFor(env: Env, renew = false): Promise<string | null> {
+  if (renew) socketToken = null
+  if (socketToken && socketToken.until > Date.now()) return socketToken.value
+  requestingToken ??= requestToken(env).finally(() => {
+    requestingToken = null
+  })
+  return requestingToken
+}
+
 /**
  * The request as Traccar should see it: the same call, authenticated as the Worker's account, and an Origin that is
  * Traccar's own (like the dev proxy). Nothing the browser sent for authentication (cookies, Authorization) goes through.
  */
-function toUpstream(request: Request, url: URL, env: Env, cookie: string | null): Request {
+function toUpstream(request: Request, url: URL, env: Env, cookie: string | null, token: string | null = null): Request {
   const headers = new Headers(request.headers)
   headers.set('Authorization', basicAuth(env))
   if (cookie) headers.set('Cookie', cookie)
   else headers.delete('Cookie')
   headers.set('Origin', new URL(upstreamOf(env)).origin)
   headers.delete('Referer')
-  return new Request(`${upstreamOf(env)}${url.pathname}${url.search}`, { method: request.method, headers })
+  const target = new URL(`${upstreamOf(env)}${url.pathname}${url.search}`)
+  if (token) target.searchParams.set('token', token)
+  return new Request(target, { method: request.method, headers })
 }
 
 /** Passes the answer on without anything that would tie the browser to the Traccar session. */
@@ -188,20 +226,38 @@ export async function handleRequest(request: Request, env: Env): Promise<Respons
       return toBrowser(response, cors)
     }
 
-    // WebSocket: Traccar ties it to a session, so get a cookie from a fresh sign-in (the Basic header goes along too).
+    // WebSocket. Traccar answers an upgrade it does not accept with a bare "200", so each attempt is checked for the 101
+    // and what the others got is kept, to explain the failure if nothing opens.
+    const tried: Array<{ via: string; status: number | string }> = []
+    const attempt = async (via: string, cookie: string | null, token: string | null) => {
+      const response = await fetch(toUpstream(request, url, env, cookie, token))
+      if (response.status === 101) return response // the live socket: hand it over untouched
+      tried.push({ via, status: response.status })
+      return null
+    }
+
+    const token = await tokenFor(env)
+    if (token) {
+      const opened = await attempt('token', null, token)
+      if (opened) return opened
+      await tokenFor(env, true) // maybe it was refused: the next connection asks for a fresh one
+    } else {
+      tried.push({ via: 'token', status: 'not issued' })
+    }
+
     let cookie = await cookieFor(env)
-    let response = await fetch(toUpstream(request, url, env, cookie))
-    if (response.status === 401 && cookie) {
-      // The session expired on Traccar's side: sign in again once and repeat the call.
-      cookie = await cookieFor(env, true)
-      response = await fetch(toUpstream(request, url, env, cookie))
+    if (cookie) {
+      const opened = await attempt('cookie', cookie, null)
+      if (opened) return opened
+      cookie = await cookieFor(env, true) // the session may have expired: sign in again once
+      if (cookie) {
+        const renewed = await attempt('cookie (new sign-in)', cookie, null)
+        if (renewed) return renewed
+      }
+    } else {
+      tried.push({ via: 'cookie', status: 'no cookie' })
     }
-    // A successful upgrade (101) carries the live socket: hand it over untouched.
-    if (response.status === 101) return response
-    if (response.status === 401) {
-      return json(401, { error: 'Traccar rejected the WebSocket (session cookie and account both)', cookies: cookieNames(cookie) }, cors)
-    }
-    return toBrowser(response, cors)
+    return json(502, { error: 'Traccar did not open the WebSocket', tried }, cors)
   } catch {
     // Traccar is down or unreachable. Say so with CORS headers, so the browser shows the app's error screen
     // instead of an opaque network failure.

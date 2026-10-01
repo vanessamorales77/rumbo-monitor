@@ -29,10 +29,19 @@ interface TraccarOptions {
   noCookie?: boolean
   /** Name of the session cookie. */
   cookieName?: string
+  /** The server does not issue access tokens (older Traccar), or does not honour them on the socket. */
+  noTokens?: boolean
   /** The server is unreachable. */
   down?: boolean
   /** The session stops being valid after this many authenticated calls (until a second sign-in). */
   expireAfter?: number
+}
+
+/** Node cannot build a Response with status 101, so the fake socket is a 200 whose status reads 101. */
+const switchingProtocols = () => {
+  const response = new Response('socket', { status: 200 })
+  Object.defineProperty(response, 'status', { value: 101 })
+  return response
 }
 
 /** A stand-in for Traccar that records what the Worker sends it. */
@@ -41,6 +50,7 @@ function fakeTraccar(options: TraccarOptions = {}) {
   const cookieName = options.cookieName ?? 'JSESSIONID'
   let logins = 0
   let served = 0
+  let tokensIssued = 0
   globalThis.fetch = (async (input: Request | string | URL, init?: RequestInit) => {
     const request = input instanceof Request ? input : new Request(input, init)
     const cookie = request.headers.get('Cookie')
@@ -68,19 +78,29 @@ function fakeTraccar(options: TraccarOptions = {}) {
       })
     }
 
+    if (pathname === '/api/session/token' && request.method === 'POST') {
+      if (options.noTokens || options.rejectCredentials || authorization !== BASIC) return new Response('no', { status: 404 })
+      tokensIssued += 1
+      return new Response(`token-${tokensIssued}`, { status: 200, headers: { 'Content-Type': 'text/plain' } })
+    }
+
     const basicOk = !options.rejectCredentials && authorization === BASIC
     served += 1
     const expired = options.expireAfter !== undefined && served > options.expireAfter && logins < 2
     const cookieOk = !options.cookiesUseless && !expired && cookie === `${cookieName}=session-${logins}`
     // Like Traccar's sockets, a path that wants a session does not look at Basic credentials.
-    const needsSession = pathname === '/api/socket'
-    if (!(needsSession ? cookieOk : basicOk || cookieOk)) return new Response('no', { status: 401 })
+    if (pathname === '/api/socket') {
+      const tokenOk = !options.noTokens && new URL(request.url).searchParams.get('token') === `token-${tokensIssued}` && tokensIssued > 0
+      // What the real server does with a socket it does not accept: a bare 200, not a 401.
+      return tokenOk || cookieOk ? switchingProtocols() : new Response('', { status: 200, headers: { 'Content-Length': '0' } })
+    }
+    if (!(basicOk || cookieOk)) return new Response('no', { status: 401 })
     return new Response(JSON.stringify([{ id: 7 }]), {
       status: 200,
       headers: { 'Content-Type': 'application/json', 'Set-Cookie': 'JSESSIONID=leak; Path=/' },
     })
   }) as typeof fetch
-  return { seen, logins: () => logins }
+  return { seen, logins: () => logins, tokens: () => tokensIssued }
 }
 
 const call = (path: string, init: RequestInit & { origin?: string | null } = {}) => {
@@ -214,6 +234,9 @@ describe('sign-in route', () => {
 })
 
 describe('WebSocket', () => {
+  /** An accepted socket is the upstream 101, handed over untouched. */
+  const opens = async (response: Response) => response.status === 101
+
   it('refuses a plain request to the socket path', async () => {
     const { seen } = fakeTraccar()
     assert.equal((await call('/api/socket')).status, 426)
@@ -227,51 +250,80 @@ describe('WebSocket', () => {
     assert.equal(seen.length, 0)
   })
 
-  it('forwards the upgrade with a fresh session cookie, and the account as well', async () => {
-    const { seen } = fakeTraccar()
+  it('connects with an access token first: no session to lose, no sign-in needed', async () => {
+    const fake = fakeTraccar({ cookiesUseless: true })
     const response = await call('/api/socket', { headers: upgrade })
-    assert.equal(response.status, 200)
-    const upstream = seen.find((s) => s.url.endsWith('/api/socket'))
-    assert.equal(upstream?.cookie, 'JSESSIONID=session-1')
-    assert.equal(upstream?.authorization, BASIC)
+    assert.ok(await opens(response))
+    const upstream = fake.seen.find((s) => s.url.includes('/api/socket'))
+    assert.match(upstream?.url ?? '', /[?&]token=token-1/)
+    assert.equal(upstream?.cookie, null)
     assert.equal(upstream?.origin, 'https://traccar.test')
+    assert.equal(fake.logins(), 0)
   })
 
-  it('signs in once for simultaneous upgrades and reuses the session', async () => {
+  it('asks Traccar for one token and shares it between simultaneous connections', async () => {
     const fake = fakeTraccar()
+    await Promise.all([call('/api/socket', { headers: upgrade }), call('/api/socket', { headers: upgrade })])
+    await call('/api/socket', { headers: upgrade })
+    assert.equal(fake.tokens(), 1)
+  })
+
+  it('does not ship the token to the browser', async () => {
+    fakeTraccar()
+    const response = await call('/api/socket', { headers: upgrade })
+    assert.ok(!JSON.stringify([...response.headers]).includes('token-'))
+    assert.equal(response.headers.get('Set-Cookie'), null)
+  })
+
+  it('falls back to a fresh session cookie when the server issues no tokens', async () => {
+    const fake = fakeTraccar({ noTokens: true })
+    assert.ok(await opens(await call('/api/socket', { headers: upgrade })))
+    const upstream = fake.seen.find((s) => s.url.includes('/api/socket'))
+    assert.equal(upstream?.cookie, 'JSESSIONID=session-1')
+    assert.equal(upstream?.authorization, BASIC)
+  })
+
+  it('signs in once for simultaneous cookie upgrades and reuses the session', async () => {
+    const fake = fakeTraccar({ noTokens: true })
     await Promise.all([call('/api/socket', { headers: upgrade }), call('/api/socket', { headers: upgrade })])
     await call('/api/socket', { headers: upgrade })
     assert.equal(fake.logins(), 1)
   })
 
   it('signs in again, once, when Traccar expires the session', async () => {
-    const fake = fakeTraccar({ expireAfter: 1 })
-    assert.equal((await call('/api/socket', { headers: upgrade })).status, 200)
-    assert.equal((await call('/api/socket', { headers: upgrade })).status, 200)
+    const fake = fakeTraccar({ noTokens: true, expireAfter: 1 })
+    assert.ok(await opens(await call('/api/socket', { headers: upgrade })))
+    assert.ok(await opens(await call('/api/socket', { headers: upgrade })))
     assert.equal(fake.logins(), 2)
   })
 
   it('uses whatever name Traccar gives its session cookie', async () => {
-    const { seen } = fakeTraccar({ cookieName: 'TRACCAR_SESSION' })
-    assert.equal((await call('/api/socket', { headers: upgrade })).status, 200)
-    assert.equal(seen.find((s) => s.url.endsWith('/api/socket'))?.cookie, 'TRACCAR_SESSION=session-1')
+    const { seen } = fakeTraccar({ noTokens: true, cookieName: 'TRACCAR_SESSION' })
+    assert.ok(await opens(await call('/api/socket', { headers: upgrade })))
+    assert.equal(seen.find((s) => s.url.includes('/api/socket'))?.cookie, 'TRACCAR_SESSION=session-1')
   })
 
-  it('still tries the upgrade when the sign-in brought no cookie, and says why if Traccar refuses it', async () => {
-    fakeTraccar({ noCookie: true })
+  it('explains what each attempt got when nothing opens, without any secret value', async () => {
+    fakeTraccar({ noTokens: true, cookiesUseless: true })
     const response = await call('/api/socket', { headers: upgrade })
-    assert.equal(response.status, 401)
-    const body = (await response.json()) as { error: string; cookies: string[] }
-    assert.match(body.error, /rejected the WebSocket/)
-    assert.deepEqual(body.cookies, [])
+    assert.equal(response.status, 502)
+    assert.equal(response.headers.get('Access-Control-Allow-Origin'), APP)
+    const body = (await response.json()) as { error: string; tried: Array<{ via: string; status: number | string }> }
+    assert.match(body.error, /did not open the WebSocket/)
+    assert.deepEqual(body.tried, [
+      { via: 'token', status: 'not issued' },
+      { via: 'cookie', status: 200 },
+      { via: 'cookie (new sign-in)', status: 200 },
+    ])
+    assert.ok(!JSON.stringify(body).match(/session-|token-/), 'no cookie or token value in the answer')
   })
 
-  it('names the cookies (never their values) when Traccar rejects the session even after a fresh sign-in', async () => {
-    fakeTraccar({ cookiesUseless: true })
-    const response = await call('/api/socket', { headers: upgrade })
-    assert.equal(response.status, 401)
-    const body = (await response.json()) as { error: string; cookies: string[] }
-    assert.deepEqual(body.cookies, ['JSESSIONID'])
-    assert.ok(!JSON.stringify(body).includes('session-'), 'no cookie value in the answer')
+  it('says there was no cookie when the sign-in brought none', async () => {
+    fakeTraccar({ noTokens: true, noCookie: true })
+    const body = (await (await call('/api/socket', { headers: upgrade })).json()) as { tried: Array<{ via: string; status: unknown }> }
+    assert.deepEqual(body.tried, [
+      { via: 'token', status: 'not issued' },
+      { via: 'cookie', status: 'no cookie' },
+    ])
   })
 })
