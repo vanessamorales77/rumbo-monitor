@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { fn } from 'storybook/test'
+import { ThemePair } from '../ThemePair'
 import { FeedStatus } from './FeedStatus'
 
 const ago = (seconds: number) => new Date(Date.now() - seconds * 1000).toISOString()
@@ -9,11 +10,15 @@ const meta = {
   component: FeedStatus,
   args: { mode: 'live', lastFix: ago(4), demo: false, onEnterDemo: fn(), onExitDemo: fn() },
   decorators: [
-    (Story) => (
-      <div style={{ position: 'relative', width: 420, height: 130 }}>
+    // The side-by-side story lays itself out (parameters.fullWidth), so it skips this fixed frame.
+    (Story, { parameters }) =>
+      parameters.fullWidth ? (
         <Story />
-      </div>
-    ),
+      ) : (
+        <div style={{ position: 'relative', width: 'min(100%, 420px)', minHeight: 130 }}>
+          <Story />
+        </div>
+      ),
   ],
   parameters: {
     docs: {
@@ -44,7 +49,7 @@ const mobileStory = (args: Story['args'], note: string): Story => ({
   parameters: { layout: 'fullscreen', docs: { description: { story: note } } },
   decorators: [
     () => (
-      <div style={{ width: '100%', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+      <div style={{ width: '100%', boxSizing: 'border-box', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
         <FeedStatus {...(meta.args as Required<NonNullable<Story['args']>>)} {...args} />
         <div
           style={{
@@ -77,4 +82,29 @@ export const MovilDemostracion: Story = {
 export const MovilEnVivo: Story = {
   name: 'Móvil: en vivo',
   ...mobileStory({ mode: 'live' }, MOBILE_NOTE),
+}
+
+const feedStates: Array<{ label: string; args: NonNullable<Story['args']> }> = [
+  { label: 'En vivo', args: { mode: 'live' } },
+  { label: 'Polling', args: { mode: 'polling' } },
+  { label: 'Sin datos nuevos', args: { mode: 'live', lastFix: ago(6 * 3600) } },
+  { label: 'Sin conexión', args: { mode: 'lost' } },
+  { label: 'Modo demostración', args: { demo: true } },
+]
+
+/** Cada estado usa un color distinto (verde, ámbar, rojo, azul): se comparan en ambos temas a la vez. */
+export const ClaroYOscuro: Story = {
+  name: 'Claro y oscuro: todos los estados',
+  parameters: { layout: 'padded', fullWidth: true },
+  render: () => (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+      {feedStates.map(({ label, args }) => (
+        <ThemePair key={label} label={label}>
+          <div style={{ position: 'relative', width: '22rem', height: '5.5rem' }}>
+            <FeedStatus {...(meta.args as Required<NonNullable<Story['args']>>)} {...args} />
+          </div>
+        </ThemePair>
+      ))}
+    </div>
+  ),
 }

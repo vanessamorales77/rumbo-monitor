@@ -1,8 +1,12 @@
-/* "Calm Dispatch" colour tokens (from the Stitch DESIGN.md).
+/* The bare [data-theme] selectors let any container (not just <html>) take a theme, so Storybook can
+   show light and dark side by side. The app only ever sets it on <html>.
+
+   "Calm Dispatch" colour tokens (from the Stitch DESIGN.md).
    Ratios noted against the surface they sit on (WCAG 2.1 AA: 4.5:1 text, 3:1 UI). */
 
 :root,
-:root[data-theme='light'] {
+:root[data-theme='light'],
+[data-theme='light'] {
   color-scheme: light;
   --color-bg: #f3f5f9;
   --color-surface: #ffffff;
@@ -28,7 +32,8 @@
   --map-tile-filter: saturate(0.55) contrast(0.95) brightness(1.03);
 }
 
-:root[data-theme='dark'] {
+:root[data-theme='dark'],
+[data-theme='dark'] {
   color-scheme: dark;
   --color-bg: #0a1424;
   --color-surface: #101c30;

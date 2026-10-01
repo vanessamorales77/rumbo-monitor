@@ -47,7 +47,7 @@ export const FranjaDeEstado: Story = {
     },
   },
   render: () => (
-    <div style={{ width: '100%', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+    <div style={{ width: '100%', boxSizing: 'border-box', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
       <FeedSkeleton />
       <div style={{ position: 'relative', height: '12rem' }}>
         <MapSkeleton />
