@@ -111,7 +111,13 @@ const sideBySide: Array<{ label: string; device: ReturnType<typeof makeDevice>; 
 export const ClaroYOscuro: Story = {
   name: 'Claro y oscuro: estados clave',
   args: { device: makeDevice(), position: makePosition() },
-  parameters: { layout: 'padded', fullWidth: true },
+  parameters: {
+    layout: 'padded',
+    fullWidth: true,
+    // Every card is drawn twice on purpose (light and dark), so identical landmark names are expected here.
+    // In the app there is a single card.
+    a11y: { config: { rules: [{ id: 'landmark-unique', enabled: false }] } },
+  },
   render: () => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
       {sideBySide.map(({ label, device, position }) => (

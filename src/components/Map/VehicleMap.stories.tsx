@@ -72,3 +72,29 @@ export const SinPosicion: Story = {
   name: 'Sin posición todavía',
   args: { device: makeDevice({ status: 'unknown' }), position: null },
 }
+
+/** Switching to a vehicle that has never reported a position must not leave the previous vehicle's marker behind. */
+function SwitchingVehicle() {
+  const [withPosition, setWithPosition] = useState(true)
+  const device = withPosition ? makeDevice({ id: 1, name: 'Chevrolet NPR · ABC-123' }) : makeDevice({ id: 2, name: 'Renault Master · GHI-789', status: 'unknown' })
+  const position = withPosition ? makePosition({ ageSeconds: 0 }) : null
+  return (
+    <>
+      <div style={{ position: 'absolute', top: '-3rem', display: 'flex', gap: '0.5rem' }}>
+        <button type="button" onClick={() => setWithPosition(true)}>
+          Vehículo con posición
+        </button>
+        <button type="button" onClick={() => setWithPosition(false)}>
+          Vehículo sin posición
+        </button>
+      </div>
+      <VehicleMap device={device} position={position} />
+    </>
+  )
+}
+
+export const CambioASinPosicion: Story = {
+  name: 'Cambio a un vehículo sin posición (no deja el marcador anterior)',
+  args: { device: makeDevice(), position: makePosition() },
+  render: () => <SwitchingVehicle />,
+}

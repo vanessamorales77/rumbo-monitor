@@ -208,10 +208,26 @@ export function useVehicleMarker({ containerRef, latitude, longitude, course, st
   // Position: create the marker on first fix, glide on the following ones.
   useEffect(() => {
     const map = mapRef.current
-    if (!map || latitude === null || longitude === null) return
+    if (!map) return
+    if (latitude === null || longitude === null) {
+      // This vehicle has no position: showing the previous vehicle's marker (under this one's name) would be a lie.
+      if (markerRef.current) {
+        cancelAnimationFrame(frameRef.current)
+        markerRef.current.remove()
+        markerRef.current = null
+        rotorRef.current = null
+        currentRef.current = null
+        lastFixMsRef.current = null
+        clearTrail(trailRef.current)
+      }
+      snapKeyRef.current = snapKey
+      return
+    }
     const target = L.latLng(latitude, longitude)
 
     if (!markerRef.current) {
+      snapKeyRef.current = snapKey
+      lastFixMsRef.current = fixTime ? Date.parse(fixTime) : null
       const icon = L.divIcon({ className: 'vehicle-marker', html: markerHtml, iconSize: [SIZE, SIZE], iconAnchor: [SIZE / 2, SIZE / 2] })
       // Not focusable: it has no action, and its description is in the status card and the label below.
       markerRef.current = L.marker(target, { icon, keyboard: false }).addTo(map)

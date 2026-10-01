@@ -6,6 +6,7 @@ import { ErrorState } from '../ErrorState/ErrorState'
 import { FeedStatus } from '../FeedStatus/FeedStatus'
 import { FleetSummary } from '../FleetSummary/FleetSummary'
 import { VehicleMap } from '../Map/VehicleMap'
+import { NoVehicles } from '../NoVehicles/NoVehicles'
 import { CardSkeleton, FeedSkeleton, MapSkeleton } from '../Skeleton/Skeleton'
 import { StatusCard } from '../StatusCard/StatusCard'
 import { ThemeToggle } from '../ThemeToggle/ThemeToggle'
@@ -83,6 +84,7 @@ export function AppShell() {
               {phase === 'ready' && monitor.selectedDevice && (
                 <StatusCard device={monitor.selectedDevice} position={monitor.selectedPosition} />
               )}
+              {phase === 'ready' && !monitor.selectedDevice && <NoVehicles />}
             </div>
           </>
         )}

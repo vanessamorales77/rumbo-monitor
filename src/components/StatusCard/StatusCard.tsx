@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import type { Device, Position } from '../../api'
 import { useNow } from '../../hooks/useNow'
 import { useTweenedNumber } from '../../hooks/useTweenedNumber'
@@ -24,6 +24,8 @@ interface Props {
 
 export function StatusCard({ device, position }: Props) {
   const now = useNow()
+  // One id per card, so several cards on the same page (stories, a future fleet view) never share a label.
+  const titleId = useId()
   const { model, plate } = splitVehicleName(device.name)
   const lastSpeed = position ? knotsToKmh(position.speed) : null
   // Without a connection (or with an old fix) we do not know the speed: it is NOT zero, the vehicle may still
@@ -41,9 +43,9 @@ export function StatusCard({ device, position }: Props) {
   const announcement = useAnnouncement(device, speed, batteryLow)
 
   return (
-    <section className="status-card status-card--enter" aria-labelledby="status-card-title">
+    <section className="status-card status-card--enter" aria-labelledby={titleId}>
       <header className="status-card__header">
-        <h2 id="status-card-title" className="status-card__title">
+        <h2 id={titleId} className="status-card__title">
           {model}
         </h2>
         {/* Label/value pairs, like the rest of the card: the labels are read by screen readers but not drawn. */}
