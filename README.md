@@ -6,7 +6,7 @@ Hecha para la prueba técnica de **Design Engineer (UX/UI)**. El foco está en l
 
 > **Estado del proyecto**
 > - Aplicación desplegada: <https://rumbo-monitor.vercel.app> (Vercel), que habla con Traccar a través de un Worker de Cloudflare (ver [Despliegue](#despliegue)).
-> - Video de presentación: _pendiente_.
+> - Video de presentación: <https://www.youtube.com/watch?v=Cex1v4IiphY>
 
 Repositorio: <https://github.com/vanessamorales77/rumbo-monitor>
 
@@ -28,7 +28,7 @@ Repositorio: <https://github.com/vanessamorales77/rumbo-monitor>
 | Accesibilidad WCAG 2.1 AA (`<dl>`, teclado, foco, `aria-label`, `aria-live`) | Ver [Accesibilidad](#accesibilidad-wcag-21-aa) |
 | Repositorio con README (cómo ejecutar, variables y _endpoints_) | Este documento |
 | Aplicación desplegada | <https://rumbo-monitor.vercel.app> |
-| Video de presentación | _Pendiente_ |
+| Video de presentación (5–10 min) | <https://www.youtube.com/watch?v=Cex1v4IiphY> |
 
 ## Stack
 
